@@ -28,6 +28,7 @@ export async function POST(req, {params}) {
   try {
     const {
       product_name,
+      product_type,
       product_price,
       product_size,
       product_image,
@@ -36,6 +37,7 @@ export async function POST(req, {params}) {
     } = await req.json();
     if (
       !product_name ||
+      !product_type ||
       !product_price ||
       !product_size ||
       product_status === undefined
@@ -49,9 +51,10 @@ export async function POST(req, {params}) {
       );
     }
     const [result] = await pool.query(
-      "INSERT INTO product (product_name, product_price, product_size, product_image, product_description, product_status) VALUES (?, ?, ?, ?, ?, ?)",
+      "INSERT INTO product (product_name, product_type, product_price, product_size, product_image, product_description, product_status) VALUES (?, ?, ?, ?, ?, ?)",
       [
         product_name,
+        product_type,
         product_price,
         product_size,
         product_image,
