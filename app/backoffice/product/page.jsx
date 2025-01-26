@@ -20,7 +20,7 @@ const ProductsPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [notification, setNotification] = useState('');
-  //
+
   const fetchProductTypes = useCallback(async () => {
     try {
       const res = await fetch('/api/product_type');
@@ -313,7 +313,7 @@ const ProductsPage = () => {
           </div>
 
           <div>
-            <label htmlFor="product_type" className="block">ประเภทสินค้า</label>
+            <label htmlFor="product_type" className="block">ประเภท</label>
             <select
               id="product_type"
               name="product_type"

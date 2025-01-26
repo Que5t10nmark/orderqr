@@ -178,7 +178,7 @@ const ProductTypePage = () => {
 
       <Modal isOpen={isModalOpen} closeModal={closeModal}>
         <h2 className="text-xl font-semibold mb-4">
-          {isEditing ? 'แก้ไขประเภทอาหาร' : 'เพิ่มประเภทอาหารหม่'}
+          {isEditing ? 'แก้ไขประเภทอาหาร' : 'เพิ่มประเภทอาหารใหม่'}
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>

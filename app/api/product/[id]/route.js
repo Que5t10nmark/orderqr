@@ -41,33 +41,47 @@ export async function GET(req, { params }) {
 }
 export async function DELETE(req, { params }) {
   try {
-    const product_id = Number(params.id);
+    const { id } = params;
+    const product_id = Number(id);
+
     if (isNaN(product_id)) {
-      return new Response(JSON.stringify({ message: "Invalid product ID" }), {
-        status: 400, // Bad Request
-        headers: { "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({ message: "Invalid product_ID" }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
     }
-    const [products] = await pool.query(
+
+    const [result] = await pool.query(
       "DELETE FROM product WHERE product_id = ?",
       [product_id]
     );
-    if (products.length === 0) {
-      return new Response(JSON.stringify({ message: "Product not found" }), {
-        status: 404, // Not Found
-        headers: { "Content-Type": "application/json" },
-      });
+
+    if (result.affectedRows === 0) {
+      return new Response(
+        JSON.stringify({ message: "Product not found" }),
+        {
+          status: 404,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
     }
-    return new Response(JSON.stringify(products), {
-      status: 200,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+
+    return new Response(
+      JSON.stringify({ message: "Product deleted successfully" }),
+      {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
   } catch (error) {
     return new Response(
       JSON.stringify({
-        message: "Error fetching products",
+        message: "Error deleting product type",
         error: error.message,
       }),
       {

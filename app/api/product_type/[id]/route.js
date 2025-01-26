@@ -53,7 +53,10 @@ export async function GET(req, { params }) {
 
 export async function POST(req) {
   try {
-    const { product_type_name } = await req.json();
+
+    const body = await req.json();
+    const { product_type_name } = body || {};
+
     if (!product_type_name) {
       return new Response(
         JSON.stringify({ message: "Missing required field: product_type_name" }),
@@ -66,7 +69,7 @@ export async function POST(req) {
       [product_type_name]
     );
 
-    if (result.affectedRows === 0) {
+    if (!result || result.affectedRows === 0) {
       return new Response(
         JSON.stringify({ message: "Failed to add product type" }),
         { status: 500, headers: { "Content-Type": "application/json" } }
@@ -74,7 +77,10 @@ export async function POST(req) {
     }
     
     return new Response(
-      JSON.stringify({ message: "Product type added successfully", product_type_id: result.insertId }),
+      JSON.stringify({
+        message: "Product type added successfully",
+        product_type_id: result.insertId,
+      }),
       { status: 201, headers: { "Content-Type": "application/json" } }
     );
   } catch (error) {
@@ -87,6 +93,7 @@ export async function POST(req) {
     );
   }
 }
+
 
 export async function PUT(req, { params }) {
   try {
