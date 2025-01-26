@@ -25,6 +25,9 @@ export default function Sidebar() {
         <Link href="/backoffice/product_size" className="hover:bg-white hover:text-orange-500 text-white px-4 py-2 rounded-md">
           ขนาดอาหาร
         </Link>
+        <Link href="/backoffice/seat" className="hover:bg-white hover:text-orange-500 text-white px-4 py-2 rounded-md">
+          ข้อมูลโต๊ะ
+        </Link>
         <Link href="/backoffice/staff" className="hover:bg-white hover:text-orange-500 text-white px-4 py-2 rounded-md">
           ข้อมูลพนักงาน
         </Link>

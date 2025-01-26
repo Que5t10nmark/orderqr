@@ -4,7 +4,7 @@ import Modal from '../components/Modal';
 
 const ProductsPage = () => {
   const [products, setProducts] = useState([]);
-  const [productTypes, setProductTypes] = useState([]); // เพิ่ม state สำหรับประเภทสินค้า
+  const [productTypes, setProductTypes] = useState([]);
   const [newProduct, setNewProduct] = useState({
     product_name: '',
     product_type: '',
@@ -20,8 +20,7 @@ const ProductsPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [notification, setNotification] = useState('');
-
-  // ดึงข้อมูลประเภทสินค้าจาก API
+  //
   const fetchProductTypes = useCallback(async () => {
     try {
       const res = await fetch('/api/product_type');

@@ -154,7 +154,6 @@ const ProductTypePage = () => {
           </thead>
           <tbody>
             {productTypes.map((productType) => (
-              // Ensure each child has a unique "key" prop
               <tr key={productType.product_type_id}>
                 <td className="px-4 py-2 border">{productType.product_type_name}</td>
                 <td className="px-4 py-2 border">
