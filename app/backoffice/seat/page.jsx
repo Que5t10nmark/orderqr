@@ -1,9 +1,7 @@
-import React from 'react'
+import React from "react";
+import Modal from "../components/Modal";
+import Swal from "sweetalert2";
 
-function SeatPage() {
-  return (
-    <div>SeatPage</div>
-  )
+export default function SeatPage() {
+  return <div>SeatPage</div>;
 }
-
-export default SeatPage
