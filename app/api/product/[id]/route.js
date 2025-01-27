@@ -4,30 +4,34 @@ export async function GET(req, { params }) {
     const product_id = Number(params.id);
     if (isNaN(product_id)) {
       return new Response(JSON.stringify({ message: "Invalid product ID" }), {
-        status: 400, // Bad Request
+        status: 400,
         headers: { "Content-Type": "application/json" },
       });
     }
+
     const [products] = await pool.query(
       "SELECT * FROM product WHERE product_id = ?",
       [product_id]
     );
+
     if (products.length === 0) {
-      return new Response(JSON.stringify({ message: "Product not found" }), {
-        status: 404, // Not Found
-        headers: { "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({ message: "Product not found" }),
+        {
+          status: 404,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
     }
-    return new Response(JSON.stringify(products), {
+
+    return new Response(JSON.stringify(products[0]), {
       status: 200,
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
     return new Response(
       JSON.stringify({
-        message: "Error fetching products",
+        message: "Error fetching product",
         error: error.message,
       }),
       {
@@ -39,6 +43,7 @@ export async function GET(req, { params }) {
     );
   }
 }
+
 export async function DELETE(req, { params }) {
   try {
     const { id } = params;

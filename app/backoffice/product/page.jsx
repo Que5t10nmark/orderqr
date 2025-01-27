@@ -4,15 +4,14 @@ import Modal from '../components/Modal';
 
 const ProductsPage = () => {
   const [products, setProducts] = useState([]);
-  const [productTypes, setProductTypes] = useState([]);
   const [newProduct, setNewProduct] = useState({
     product_name: '',
-    product_type: '',
     product_price: '',
     product_size: '',
     product_image: '',
     product_description: '',
     product_status: true,
+    product_type: '',
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -20,17 +19,6 @@ const ProductsPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [notification, setNotification] = useState('');
-
-  const fetchProductTypes = useCallback(async () => {
-    try {
-      const res = await fetch('/api/product_type');
-      if (!res.ok) throw new Error('Failed to fetch product types');
-      const data = await res.json();
-      setProductTypes(data);
-    } catch (err) {
-      setError('Error fetching product types: ' + err.message);
-    }
-  }, []);
 
   const fetchProducts = useCallback(async () => {
     setLoading(true);
@@ -58,6 +46,7 @@ const ProductsPage = () => {
       const newProduct = await res.json();
       setProducts((prevProducts) => [...prevProducts, newProduct]);
       setNotification('เพิ่มรายการสำเร็จ!');
+      setTimeout(() => setNotification(''), 3000);
     } catch (err) {
       setError('Error adding product: ' + err.message);
     }
@@ -74,7 +63,7 @@ const ProductsPage = () => {
       const updatedProduct = await res.json();
       setProducts((prevProducts) =>
         prevProducts.map((product) =>
-          product.id === productId ? updatedProduct : product
+          product.product.id === productId ? updatedProduct : product
         )
       );
       setNotification('แก้ไขสำเร็จ!');
@@ -90,7 +79,7 @@ const ProductsPage = () => {
       });
       if (!res.ok) throw new Error('Failed to delete product');
       setProducts((prevProducts) =>
-        prevProducts.filter((product) => product.id !== productId)
+        prevProducts.filter((product) => product.product.id !== productId)
       );
       setNotification('ลบสำเร็จ!');
       closeModal();
@@ -99,8 +88,29 @@ const ProductsPage = () => {
     }
   };
 
-  const openModal = () => {
-    setIsEditing(false);
+  const openModal = (product = null) => {
+    if (product) {
+      setNewProduct({
+        product_id: product.product_id,
+        product_name: product.product_name,
+        product_size: product.product_size,
+        product_price: product.product_price,
+        product_image: product.product_image,
+        product_description: product.product_description,
+        product_status: product.product_status,
+        product_type: product.product_type,
+      });
+      setIsEditing(true);
+    } else {
+      setNewProduct({ product_name: '' });
+      setNewProduct({ product_size: '' });
+      setNewProduct({ product_price: '' });
+      setNewProduct({ product_image: '' });
+      setNewProduct({ product_description: '' });
+      setNewProduct({ product_status: '' });
+      setNewProduct({ product_type: '' });
+      setIsEditing(false);
+    }
     setIsModalOpen(true);
   };
 
@@ -140,7 +150,6 @@ const ProductsPage = () => {
       product_image: '',
       product_description: '',
       product_status: true,
-      product_type: '',
     });
   };
 
@@ -149,9 +158,8 @@ const ProductsPage = () => {
   );
 
   useEffect(() => {
-    fetchProductTypes();
     fetchProducts();
-  }, [fetchProductTypes, fetchProducts]);
+  }, [fetchProducts]);
 
   const renderError = () => error && <p className="text-red-500 mb-4">{error}</p>;
   const renderLoading = () => loading && <p>กำลังโหลด...</p>;
@@ -165,7 +173,6 @@ const ProductsPage = () => {
       product_image: product.product_image,
       product_description: product.product_description,
       product_status: product.product_status,
-      product_type: product.product_type,
     });
     setIsEditing(true);
     openModal();
@@ -207,47 +214,45 @@ const ProductsPage = () => {
           <thead>
             <tr>
               <th className="px-4 py-2 border">ชื่อสินค้า</th>
+              <th className="px-4 py-2 border">ประเภทอาหาร</th>
               <th className="px-4 py-2 border">ราคา</th>
               <th className="px-4 py-2 border">ขนาด</th>
-              <th className="px-4 py-2 border">ประเภท</th>
               <th className="px-4 py-2 border">สถานะ</th>
               <th className="px-4 py-2 border">การจัดการ</th>
             </tr>
           </thead>
           <tbody>
-            {filteredProducts.map((product) => (
-              <tr key={product.id}>
-                <td className="px-4 py-2 border">{product.product_name}</td>
-                <td className="px-4 py-2 border">{product.product_price} บาท</td>
-                <td className="px-4 py-2 border">{product.product_size}</td>
-                <td className="px-4 py-2 border">{product.product_type}</td>
-                <td className="px-4 py-2 border">
-                  {product.product_status ? 'เปิดใช้งาน' : 'ปิดการใช้งาน'}
-                </td>
-            
-                <td className="px-4 py-2 border">
-                  <button
-                    onClick={() => handleEdit(product)}
-                    className="bg-yellow-500 text-white px-4 py-2 rounded mr-2"
-                  >
-                    แก้ไข
-                  </button>
-                  <button
-                    onClick={() => deleteProduct(product.id)}
-                    className="bg-red-500 text-white px-4 py-2 rounded"
-                  >
-                    ลบ
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
+      {filteredProducts.map((product) => (
+        <tr key={product.id}>
+          <td className="px-4 py-2 border">{product.product_name}</td>
+          <td className="px-4 py-2 border">{product.product_price} บาท</td>
+          <td className="px-4 py-2 border">{product.product_size}</td>
+          <td className="px-4 py-2 border">
+            {product.product_status ? 'เปิดใช้งาน' : 'ปิดการใช้งาน'}
+        </td>
+          <td className="px-4 py-2 border">
+        <button
+          onClick={() => handleEdit(product)}
+          className="bg-yellow-500 text-white px-4 py-2 rounded mr-2"
+        >
+          แก้ไข
+        </button>
+        <button
+          onClick={() => deleteProduct(product.id)}
+          className="bg-red-500 text-white px-4 py-2 rounded"
+        >
+          ลบ
+        </button>
+      </td>
+    </tr>
+  ))}
+</tbody>
         </table>
       </div>
 
       <Modal isOpen={isModalOpen} closeModal={closeModal}>
         <h2 className="text-xl font-semibold mb-4">
-          {isEditing ? 'แก้ไข' : 'เพิ่มรายการอาหารใหม่'}
+          {isEditing ? 'แก้ไขรายการอาหาร' : 'เพิ่มรายการอาหารใหม่'}
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -266,7 +271,7 @@ const ProductsPage = () => {
           <div>
             <label htmlFor="product_price" className="block">ราคา</label>
             <input
-              type="number"
+              type="text"
               id="product_price"
               name="product_price"
               value={newProduct.product_price}
@@ -313,24 +318,16 @@ const ProductsPage = () => {
           </div>
 
           <div>
-            <label htmlFor="product_type" className="block">ประเภท</label>
-            <select
-              id="product_type"
-              name="product_type"
-              value={newProduct.product_type}
+            <label htmlFor="product_status" className="block">สถานะ</label>
+            <textarea
+              id="product_status"
+              name="product_status"
+              value={newProduct.product_status}
               onChange={handleChange}
               className="w-full p-2 border border-gray-300 rounded"
-              required
-            >
-              <option value="">เลือกประเภท</option>
-              {productTypes.map((type) => (
-                <option key={type.id} value={type.name}>
-                  {type.name}
-                </option>
-              ))}
-            </select>
+            ></textarea>
           </div>
-
+          
           <div>
             <button
               type="submit"
