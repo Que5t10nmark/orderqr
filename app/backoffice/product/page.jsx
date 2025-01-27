@@ -1,27 +1,17 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import Modal from "../components/Modal";
-import Swal from "sweetalert2";
 
 const ProductsPage = () => {
   const [products, setProducts] = useState([]);
   const [newProduct, setNewProduct] = useState({
-<<<<<<< HEAD
     product_name: "",
-    product_type: "",
     product_price: "",
     product_size: "",
     product_image: "",
     product_description: "",
-=======
-    product_name: '',
-    product_price: '',
-    product_size: '',
-    product_image: '',
-    product_description: '',
->>>>>>> a35710a88df51a73354ef0dd0f92aac7a1a8e2a8
     product_status: true,
-    product_type: '',
+    product_type: "",
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -30,26 +20,6 @@ const ProductsPage = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [notification, setNotification] = useState("");
 
-<<<<<<< Updated upstream
-=======
-<<<<<<< HEAD
-<<<<<<< HEAD
-  const fetchProductTypes = useCallback(async () => {
-    try {
-      const res = await fetch("/api/product_type");
-      if (!res.ok) throw new Error("Failed to fetch product types");
-      const data = await res.json();
-      setProductTypes(data);
-    } catch (err) {
-      setError("Error fetching product types: " + err.message);
-    }
-  }, []);
-
-=======
->>>>>>> a35710a88df51a73354ef0dd0f92aac7a1a8e2a8
-=======
->>>>>>> a35710a88df51a73354ef0dd0f92aac7a1a8e2a8
->>>>>>> Stashed changes
   const fetchProducts = useCallback(async () => {
     setLoading(true);
     setError("");
@@ -75,18 +45,8 @@ const ProductsPage = () => {
       if (!res.ok) throw new Error("Failed to add product");
       const newProduct = await res.json();
       setProducts((prevProducts) => [...prevProducts, newProduct]);
-<<<<<<< HEAD
       setNotification("เพิ่มรายการสำเร็จ!");
-=======
-      setNotification('เพิ่มรายการสำเร็จ!');
-      setTimeout(() => setNotification(''), 3000);
-<<<<<<< Updated upstream
-=======
-<<<<<<< HEAD
->>>>>>> a35710a88df51a73354ef0dd0f92aac7a1a8e2a8
-=======
->>>>>>> a35710a88df51a73354ef0dd0f92aac7a1a8e2a8
->>>>>>> Stashed changes
+      setTimeout(() => setNotification(""), 3000);
     } catch (err) {
       setError("Error adding product: " + err.message);
     }
@@ -142,13 +102,13 @@ const ProductsPage = () => {
       });
       setIsEditing(true);
     } else {
-      setNewProduct({ product_name: '' });
-      setNewProduct({ product_size: '' });
-      setNewProduct({ product_price: '' });
-      setNewProduct({ product_image: '' });
-      setNewProduct({ product_description: '' });
-      setNewProduct({ product_status: '' });
-      setNewProduct({ product_type: '' });
+      setNewProduct({ product_name: "" });
+      setNewProduct({ product_size: "" });
+      setNewProduct({ product_price: "" });
+      setNewProduct({ product_image: "" });
+      setNewProduct({ product_description: "" });
+      setNewProduct({ product_status: "" });
+      setNewProduct({ product_type: "" });
       setIsEditing(false);
     }
     setIsModalOpen(true);
@@ -190,16 +150,6 @@ const ProductsPage = () => {
       product_image: "",
       product_description: "",
       product_status: true,
-<<<<<<< Updated upstream
-=======
-<<<<<<< HEAD
-<<<<<<< HEAD
-      product_type: "",
-=======
->>>>>>> a35710a88df51a73354ef0dd0f92aac7a1a8e2a8
-=======
->>>>>>> a35710a88df51a73354ef0dd0f92aac7a1a8e2a8
->>>>>>> Stashed changes
     });
   };
 
@@ -273,10 +223,6 @@ const ProductsPage = () => {
             </tr>
           </thead>
           <tbody>
-<<<<<<< Updated upstream
-=======
-<<<<<<< HEAD
-<<<<<<< HEAD
             {filteredProducts.map((product) => (
               <tr key={product.id}>
                 <td className="px-4 py-2 border">{product.product_name}</td>
@@ -284,11 +230,9 @@ const ProductsPage = () => {
                   {product.product_price} บาท
                 </td>
                 <td className="px-4 py-2 border">{product.product_size}</td>
-                <td className="px-4 py-2 border">{product.product_type}</td>
                 <td className="px-4 py-2 border">
                   {product.product_status ? "เปิดใช้งาน" : "ปิดการใช้งาน"}
                 </td>
-
                 <td className="px-4 py-2 border">
                   <button
                     onClick={() => handleEdit(product)}
@@ -306,60 +250,12 @@ const ProductsPage = () => {
               </tr>
             ))}
           </tbody>
-=======
-=======
->>>>>>> a35710a88df51a73354ef0dd0f92aac7a1a8e2a8
->>>>>>> Stashed changes
-      {filteredProducts.map((product) => (
-        <tr key={product.id}>
-          <td className="px-4 py-2 border">{product.product_name}</td>
-          <td className="px-4 py-2 border">{product.product_price} บาท</td>
-          <td className="px-4 py-2 border">{product.product_size}</td>
-          <td className="px-4 py-2 border">
-            {product.product_status ? 'เปิดใช้งาน' : 'ปิดการใช้งาน'}
-        </td>
-          <td className="px-4 py-2 border">
-        <button
-          onClick={() => handleEdit(product)}
-          className="bg-yellow-500 text-white px-4 py-2 rounded mr-2"
-        >
-          แก้ไข
-        </button>
-        <button
-          onClick={() => deleteProduct(product.id)}
-          className="bg-red-500 text-white px-4 py-2 rounded"
-        >
-          ลบ
-        </button>
-      </td>
-    </tr>
-  ))}
-</tbody>
-<<<<<<< Updated upstream
-=======
-<<<<<<< HEAD
->>>>>>> a35710a88df51a73354ef0dd0f92aac7a1a8e2a8
-=======
->>>>>>> a35710a88df51a73354ef0dd0f92aac7a1a8e2a8
->>>>>>> Stashed changes
         </table>
       </div>
 
       <Modal isOpen={isModalOpen} closeModal={closeModal}>
         <h2 className="text-xl font-semibold mb-4">
-<<<<<<< Updated upstream
-          {isEditing ? 'แก้ไขรายการอาหาร' : 'เพิ่มรายการอาหารใหม่'}
-=======
-<<<<<<< HEAD
-<<<<<<< HEAD
-          {isEditing ? "แก้ไข" : "เพิ่มรายการอาหารใหม่"}
-=======
-          {isEditing ? 'แก้ไขรายการอาหาร' : 'เพิ่มรายการอาหารใหม่'}
->>>>>>> a35710a88df51a73354ef0dd0f92aac7a1a8e2a8
-=======
-          {isEditing ? 'แก้ไขรายการอาหาร' : 'เพิ่มรายการอาหารใหม่'}
->>>>>>> a35710a88df51a73354ef0dd0f92aac7a1a8e2a8
->>>>>>> Stashed changes
+          {isEditing ? "แก้ไขรายการอาหาร" : "เพิ่มรายการอาหารใหม่"}
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -435,38 +331,18 @@ const ProductsPage = () => {
           </div>
 
           <div>
-<<<<<<< Updated upstream
-=======
-<<<<<<< HEAD
-<<<<<<< HEAD
-            <label htmlFor="product_type" className="block">
-              ประเภท
+            <label htmlFor="product_status" className="block">
+              สถานะ
             </label>
-            <select
-              id="product_type"
-              name="product_type"
-              value={newProduct.product_type}
-=======
-=======
->>>>>>> a35710a88df51a73354ef0dd0f92aac7a1a8e2a8
->>>>>>> Stashed changes
-            <label htmlFor="product_status" className="block">สถานะ</label>
             <textarea
               id="product_status"
               name="product_status"
               value={newProduct.product_status}
-<<<<<<< Updated upstream
-=======
-<<<<<<< HEAD
->>>>>>> a35710a88df51a73354ef0dd0f92aac7a1a8e2a8
-=======
->>>>>>> a35710a88df51a73354ef0dd0f92aac7a1a8e2a8
->>>>>>> Stashed changes
               onChange={handleChange}
               className="w-full p-2 border border-gray-300 rounded"
             ></textarea>
           </div>
-          
+
           <div>
             <button
               type="submit"
