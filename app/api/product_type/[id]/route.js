@@ -1,7 +1,7 @@
 import pool from "../../../lib/db";
 export async function GET(req, { params }) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const product_type_id = Number(id);
 
     if (isNaN(product_type_id)) {
