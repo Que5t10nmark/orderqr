@@ -1,8 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import Modal from "../components/Modal";
-import Image
- from "next/image";
+import Image from "next/image";
 const ProductsPage = () => {
   const [products, setProducts] = useState([]);
   const [newProduct, setNewProduct] = useState({
@@ -12,7 +11,7 @@ const ProductsPage = () => {
     product_size: "",
     product_image: "",
     product_description: "",
-    product_status: true
+    product_status: true,
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -278,18 +277,18 @@ const ProductsPage = () => {
           </div>
 
           <div>
-            <lable htmlFor="product_type" classname ="block">
+            <lable htmlFor="product_type" classname="block">
               ประเภทอาหาร
             </lable>
-          <input
-            type="text"
-            id="product_type"
-            name="product_type"
-            value={newProduct.product_type}
-            onChange={handleChange}
-            required
-            className="w-full p-2 border border-gray-300 rounded"
-          />
+            <input
+              type="text"
+              id="product_type"
+              name="product_type"
+              value={newProduct.product_type}
+              onChange={handleChange}
+              required
+              className="w-full p-2 border border-gray-300 rounded"
+            />
           </div>
           <div>
             <label htmlFor="product_price" className="block">
