@@ -12,7 +12,7 @@ export async function GET() {
   } catch (error) {
     return new Response(
       JSON.stringify({
-        message: "Error fetching products",
+        message: "Error fetching product",
         error: error.message,
       }),
       {

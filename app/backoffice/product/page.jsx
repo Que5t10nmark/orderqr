@@ -2,8 +2,12 @@
 import { useState, useEffect, useCallback } from "react";
 import Modal from "../components/Modal";
 import Image from "next/image";
+("use client");
+import { useEffect, useState, useCallback } from "react";
+import Modal from "../components/Modal";
+
 const ProductsPage = () => {
-  const [products, setProducts] = useState([]);
+  const [product, setProduct] = useState([]);
   const [newProduct, setNewProduct] = useState({
     product_name: "",
     product_type: "",
@@ -20,16 +24,16 @@ const ProductsPage = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [notification, setNotification] = useState("");
 
-  const fetchProducts = useCallback(async () => {
+  const fetchProduct = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
       const res = await fetch("/api/product");
-      if (!res.ok) throw new Error("Failed to fetch products");
+      if (!res.ok) throw new Error("Failed to fetch product");
       const data = await res.json();
-      setProducts(data);
+      setProduct(data);
     } catch (err) {
-      setError("Error fetching products: " + err.message);
+      setError("Error fetching product: " + err.message);
     } finally {
       setLoading(false);
     }
@@ -44,8 +48,8 @@ const ProductsPage = () => {
       });
       if (!res.ok) throw new Error("Failed to add product");
       const newProduct = await res.json();
-      setProducts((prevProducts) => [...prevProducts, newProduct]);
-      setNotification("เพิ่มรายการสำเร็จ!");
+      setProduct((prevProduct) => [...prevProduct, newProduct]);
+      setNotification("เพิ่มประเภทอาหารสำเร็จ!");
       setTimeout(() => setNotification(""), 3000);
     } catch (err) {
       setError("Error adding product: " + err.message);
@@ -59,16 +63,17 @@ const ProductsPage = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(productData),
       });
-      if (!res.ok) throw new Error("Failed to update product");
+      if (!res.ok) throw new Error("Failed to update product ");
       const updatedProduct = await res.json();
-      setProducts((prevProducts) =>
-        prevProducts.map((product) =>
-          product.product.id === productId ? updatedProduct : product
+      setProduct((prevProduct) =>
+        prevProduct.map((product) =>
+          product.product_id === productId ? updatedProduct : product
         )
       );
-      setNotification("แก้ไขสำเร็จ!");
+      setNotification("แก้ไขประเภทอาหารสำเร็จ!");
+      setTimeout(() => setNotification(""), 3000);
     } catch (err) {
-      setError("Error updating product: " + err.message);
+      setError("Error updating product type: " + err.message);
     }
   };
 
@@ -78,13 +83,14 @@ const ProductsPage = () => {
         method: "DELETE",
       });
       if (!res.ok) throw new Error("Failed to delete product");
-      setProducts((prevProducts) =>
-        prevProducts.filter((product) => product.product.id !== productId)
+      setProduct((prevProduct) =>
+        prevProduct.filter((product) => product.product_id !== productId)
       );
-      setNotification("ลบสำเร็จ!");
+      setNotification("ลบประเภทอาหารสำเร็จ!");
+      setTimeout(() => setNotification(""), 3000);
       closeModal();
     } catch (err) {
-      setError("Error deleting product: " + err.message);
+      setError("Error deleting product type: " + err.message);
     }
   };
 
@@ -94,8 +100,8 @@ const ProductsPage = () => {
         product_id: product.product_id,
         product_name: product.product_name,
         product_type: product.product_type,
-        product_size: product.product_size,
         product_price: product.product_price,
+        product_size: product.product_size,
         product_image: product.product_image,
         product_description: product.product_description,
         product_status: product.product_status,
@@ -103,12 +109,6 @@ const ProductsPage = () => {
       setIsEditing(true);
     } else {
       setNewProduct({ product_name: "" });
-      setNewProduct({ product_type: "" });
-      setNewProduct({ product_size: "" });
-      setNewProduct({ product_price: "" });
-      setNewProduct({ product_image: "" });
-      setNewProduct({ product_description: "" });
-      setNewProduct({ product_status: "" });
       setIsEditing(false);
     }
     setIsModalOpen(true);
@@ -123,7 +123,7 @@ const ProductsPage = () => {
       product_size: "",
       product_image: "",
       product_description: "",
-      product_status: true,
+      product_status: "",
     });
   };
 
@@ -135,7 +135,7 @@ const ProductsPage = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (isEditing) {
-      updateProduct(newProduct.id, newProduct);
+      updateProduct(newProduct.product_id, newProduct);
     } else {
       addProduct(newProduct);
     }
@@ -150,36 +150,24 @@ const ProductsPage = () => {
       product_size: "",
       product_image: "",
       product_description: "",
-      product_status: true,
+      product_status: "",
     });
   };
-
-  const filteredProducts = products.filter((product) =>
-    product.product_name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
 
   useEffect(() => {
-    fetchProducts();
-  }, [fetchProducts]);
+    fetchProduct();
+  }, [fetchProduct]);
 
-  const renderError = () =>
-    error && <p className="text-red-500 mb-4">{error}</p>;
-  const renderLoading = () => loading && <p>กำลังโหลด...</p>;
-
-  const handleEdit = (product) => {
-    setNewProduct({
-      id: product.id,
-      product_name: product.product_name,
-      product_type: product.product_type,
-      product_price: product.product_price,
-      product_size: product.product_size,
-      product_image: product.product_image,
-      product_description: product.product_description,
-      product_status: product.product_status,
-    });
-    setIsEditing(true);
-    openModal();
+  const renderError = () => {
+    if (error) {
+      return <p className="text-red-500 mb-4">{error}</p>;
+    }
+    return null;
   };
+
+  const filteredProduct = product.filter((item) =>
+    item.product_name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <div className="p-6">
@@ -187,6 +175,7 @@ const ProductsPage = () => {
 
       {renderError()}
 
+      {error && <p className="text-red-500 mb-4">{error}</p>}
       {notification && (
         <div className="mb-4 p-3 bg-green-200 text-green-800 rounded">
           {notification}
@@ -204,47 +193,48 @@ const ProductsPage = () => {
       </div>
 
       <button
-        onClick={openModal}
+        onClick={() => openModal()}
         className="bg-blue-500 text-white p-2 rounded mb-6"
       >
-        เพิ่มข้อมูล
+        เพิ่มรายการอาหาร
       </button>
 
       <div className="mb-6">
         <h2 className="text-xl font-semibold mb-4">รายการอาหาร</h2>
-        {renderLoading()}
         <table className="min-w-full table-auto border-collapse border border-gray-300">
           <thead>
             <tr>
-              <th className="px-4 py-2 border">ชื่อสินค้า</th>
+              <th className="px-4 py-2 border">ชื่ออาหาร</th>
               <th className="px-4 py-2 border">ประเภทอาหาร</th>
               <th className="px-4 py-2 border">ราคา</th>
               <th className="px-4 py-2 border">ขนาด</th>
               <th className="px-4 py-2 border">รูปภาพ</th>
+              <th className="px-4 py-2 border">คําอธิบาย</th>
               <th className="px-4 py-2 border">สถานะ</th>
               <th className="px-4 py-2 border">การจัดการ</th>
             </tr>
           </thead>
           <tbody>
-            {filteredProducts.map((product) => (
-              <tr key={product.id}>
+            {filteredProduct.map((product) => (
+              <tr key={product.product_id}>
                 <td className="px-4 py-2 border">{product.product_name}</td>
                 <td className="px-4 py-2 border">{product.product_type}</td>
                 <td className="px-4 py-2 border">{product.product_price}</td>
                 <td className="px-4 py-2 border">{product.product_size}</td>
                 <td className="px-4 py-2 border">{product.product_image}</td>
                 <td className="px-4 py-2 border">
-                  {product.product_status ? "เปิดใช้งาน" : "ปิดการใช้งาน"}
+                  {product.product_description}
                 </td>
+                <td className="px-4 py-2 border">{product.product_status}</td>
                 <td className="px-4 py-2 border">
                   <button
-                    onClick={() => handleEdit(product)}
+                    onClick={() => openModal(product)}
                     className="bg-yellow-500 text-white px-4 py-2 rounded mr-2"
                   >
                     แก้ไข
                   </button>
                   <button
-                    onClick={() => deleteProduct(product.id)}
+                    onClick={() => deleteProduct(product.product_id)}
                     className="bg-red-500 text-white px-4 py-2 rounded"
                   >
                     ลบ
@@ -258,12 +248,12 @@ const ProductsPage = () => {
 
       <Modal isOpen={isModalOpen} closeModal={closeModal}>
         <h2 className="text-xl font-semibold mb-4">
-          {isEditing ? "เพิ่มรายการอาหาร" : "แก้ไขรายการอาหาร"}
+          {isEditing ? "แก้ไขรายการอาหาร" : "เพิ่มอาหารใหม่"}
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="product_name" className="block">
-              ชื่อสินค้า
+              ชื่ออาหาร
             </label>
             <input
               type="text"
@@ -294,8 +284,27 @@ const ProductsPage = () => {
             <label htmlFor="product_price" className="block">
               ราคา
             </label>
+            =======
+            <label htmlFor="product_type" className="block">
+              ประเภทอาหาร
+            </label>
             <input
               type="text"
+              id="product_type"
+              name="product_type"
+              value={newProduct.product_type}
+              onChange={handleChange}
+              required
+              className="w-full p-2 border border-gray-300 rounded"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="product_price" className="block">
+              ราคา
+            </label>
+            <input
+              type="string"
               id="product_price"
               name="product_price"
               value={newProduct.product_price}
@@ -325,47 +334,52 @@ const ProductsPage = () => {
               รูปภาพ
             </label>
             <input
-              type="string"
+              type="text"
               id="product_image"
               name="product_image"
               value={newProduct.product_image}
               onChange={handleChange}
+              required
               className="w-full p-2 border border-gray-300 rounded"
             />
           </div>
 
           <div>
             <label htmlFor="product_description" className="block">
-              รายละเอียด
+              คําอธิบาย
             </label>
-            <textarea
+            <input
+              type="text"
               id="product_description"
               name="product_description"
               value={newProduct.product_description}
               onChange={handleChange}
+              required
               className="w-full p-2 border border-gray-300 rounded"
-            ></textarea>
+            />
           </div>
 
           <div>
             <label htmlFor="product_status" className="block">
               สถานะ
             </label>
-            <textarea
+            <input
+              type="text"
               id="product_status"
               name="product_status"
               value={newProduct.product_status}
               onChange={handleChange}
+              required
               className="w-full p-2 border border-gray-300 rounded"
-            ></textarea>
+            />
           </div>
 
-          <div>
+          <div className="mt-4 flex gap-4">
             <button
               type="submit"
-              className="bg-blue-500 text-white px-4 py-2 rounded"
+              className="bg-green-500 text-white px-6 py-2 rounded"
             >
-              {isEditing ? "บันทึก" : "อัปเดต"}
+              {isEditing ? "บันทึกการแก้ไข" : "บันทึก"}
             </button>
             <button
               type="button"
@@ -377,7 +391,7 @@ const ProductsPage = () => {
             <button
               type="button"
               onClick={closeModal}
-              className="bg-red-500 text-white px-4 py-2 rounded ml-2"
+              className="bg-red-500 text-white px-6 py-2 rounded"
             >
               ยกเลิก
             </button>

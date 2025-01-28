@@ -1,7 +1,7 @@
 import pool from "../../../lib/db";
 export async function GET(req, { params }) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const product_id = Number(id);
 
     if (isNaN(product_id)) {
@@ -21,7 +21,7 @@ export async function GET(req, { params }) {
 
     if (product.length === 0) {
       return new Response(
-        JSON.stringify({ message: "Product not found" }),
+        JSON.stringify({ message: "Product type not found" }),
         {
           status: 404,
           headers: { "Content-Type": "application/json" },
@@ -38,7 +38,7 @@ export async function GET(req, { params }) {
   } catch (error) {
     return new Response(
       JSON.stringify({
-        message: "Error fetching product ",
+        message: "Error fetching product",
         error: error.message,
       }),
       {
@@ -65,8 +65,8 @@ export async function POST(req) {
     }
 
     const [result] = await pool.query(
-      "INSERT INTO product (product__name) VALUES (?)",
-      [product_name]
+      "INSERT INTO product (product_name, product_type, product_price, product_size, product_image, product_description, product_status) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      [product_name, product_type, product_price, product_size, product_image, product_description, product_status]
     );
 
     if (!result || result.affectedRows === 0) {
@@ -79,7 +79,7 @@ export async function POST(req) {
     return new Response(
       JSON.stringify({
         message: "Product added successfully",
-        product_type_id: result.insertId,
+        product_id: result.insertId,
       }),
       { status: 201, headers: { "Content-Type": "application/json" } }
     );
@@ -94,34 +94,34 @@ export async function POST(req) {
   }
 }
 
-
 export async function PUT(req, { params }) {
   try {
-    const { id } = await params;
+    const { id } = params;
     const product_id = Number(id);
 
     if (isNaN(product_id)) {
       return new Response(
         JSON.stringify({ message: "Invalid product ID" }),
         {
-          status: 400, 
+          status: 400,
           headers: { "Content-Type": "application/json" },
         }
       );
     }
-    const { 
-      product_name, 
-      product_type, 
-      product_size, 
-      product_price, 
-      product_image, 
-      product_description, 
-      product_status 
+
+    const {
+      product_name,
+      product_type,
+      product_price,
+      product_size,
+      product_image,
+      product_description,
+      product_status,
     } = await req.json();
-    
-    if (!product_name || !product_type || !product_size || !product_price || !product_image || !product_description || !product_status) {
+
+    if (!product_name || !product_type || !product_price || !product_size || !product_image || !product_description || !product_status || !product_id) {
       return new Response(
-        JSON.stringify({ message: "All fields are required" }),
+        JSON.stringify({ message: "Missing required fields" }),
         {
           status: 400,
           headers: { "Content-Type": "application/json" },
@@ -130,8 +130,17 @@ export async function PUT(req, { params }) {
     }
 
     const [result] = await pool.query(
-      "UPDATE product SET product_name = ?, product_type = ?, product_size = ?, product_price = ?, product_image = ?, product_description = ?, product_status = ? WHERE product_id = ?",
-      [product_name, product_type, product_size, product_price, product_image, product_description, product_status, product_id]
+      "UPDATE product SET product_name = ?, product_type = ?, product_price = ?, product_size = ?, product_image = ?, product_description = ?, product_status = ? WHERE product_id = ?",
+      [
+        product_name,
+        product_type,
+        product_price,
+        product_size,
+        product_image,
+        product_description,
+        product_status,
+        product_id,
+      ]
     );
 
     if (result.affectedRows === 0) {
@@ -172,6 +181,16 @@ export async function PUT(req, { params }) {
 
 export async function DELETE(req, { params }) {
   try {
+    if (req.method !== "DELETE") {
+      return new Response(
+        JSON.stringify({ message: "Method Not Allowed" }),
+        {
+          status: 405,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+
     const { id } = params;
     const product_id = Number(id);
 
