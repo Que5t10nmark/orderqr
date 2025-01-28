@@ -119,7 +119,7 @@ export async function PUT(req, { params }) {
       product_status,
     } = await req.json();
 
-    if (!product_name || !product_type || !product_price || !product_size || !product_image || !product_description === undefined) {
+    if (!product_name || !product_type || !product_price || !product_size || !product_image || !product_description || !product_status || !product_id) {
       return new Response(
         JSON.stringify({ message: "Missing required fields" }),
         {

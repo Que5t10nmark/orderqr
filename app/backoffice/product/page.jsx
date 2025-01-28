@@ -161,9 +161,8 @@ const ProductsPage = () => {
     return null;
   };
 
-  const filteredProducts = product.filter((item) =>
-    item.product_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.product_type.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredProduct = product.filter((item) =>
+    item.product_name.toLowerCase().includes(searchQuery.toLowerCase())
   );
   
   return (
@@ -212,7 +211,7 @@ const ProductsPage = () => {
             </tr>
           </thead>
           <tbody>
-            {filteredProducts.map((product) => (
+            {filteredProduct.map((product) => (
               <tr key={product.product_id}>
                 <td className="px-4 py-2 border">{product.product_name}</td>
                 <td className="px-4 py-2 border">{product.product_type}</td>
