@@ -1,20 +1,25 @@
 import pool from "../../../lib/db";
 export async function GET(req, { params }) {
   try {
-    const product_id = Number(params.id);
+    const { id } = params;
+    const product_id = Number(id);
+
     if (isNaN(product_id)) {
-      return new Response(JSON.stringify({ message: "Invalid product ID" }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({ message: "Invalid product ID" }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
     }
 
-    const [products] = await pool.query(
+    const [product] = await pool.query(
       "SELECT * FROM product WHERE product_id = ?",
       [product_id]
     );
 
-    if (products.length === 0) {
+    if (product.length === 0) {
       return new Response(
         JSON.stringify({ message: "Product not found" }),
         {
@@ -24,14 +29,16 @@ export async function GET(req, { params }) {
       );
     }
 
-    return new Response(JSON.stringify(products[0]), {
+    return new Response(JSON.stringify(product), {
       status: 200,
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+      },
     });
   } catch (error) {
     return new Response(
       JSON.stringify({
-        message: "Error fetching product",
+        message: "Error fetching product ",
         error: error.message,
       }),
       {
@@ -44,6 +51,125 @@ export async function GET(req, { params }) {
   }
 }
 
+export async function POST(req) {
+  try {
+
+    const body = await req.json();
+    const { product_name } = body || {};
+
+    if (!product_name) {
+      return new Response(
+        JSON.stringify({ message: "Missing required field: product_name" }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    const [result] = await pool.query(
+      "INSERT INTO product (product__name) VALUES (?)",
+      [product_name]
+    );
+
+    if (!result || result.affectedRows === 0) {
+      return new Response(
+        JSON.stringify({ message: "Failed to add product" }),
+        { status: 500, headers: { "Content-Type": "application/json" } }
+      );
+    }
+    
+    return new Response(
+      JSON.stringify({
+        message: "Product added successfully",
+        product_type_id: result.insertId,
+      }),
+      { status: 201, headers: { "Content-Type": "application/json" } }
+    );
+  } catch (error) {
+    return new Response(
+      JSON.stringify({
+        message: "Error adding product",
+        error: error.message,
+      }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
+  }
+}
+
+
+export async function PUT(req, { params }) {
+  try {
+    const { id } = await params;
+    const product_id = Number(id);
+
+    if (isNaN(product_id)) {
+      return new Response(
+        JSON.stringify({ message: "Invalid product ID" }),
+        {
+          status: 400, 
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+    const { 
+      product_name, 
+      product_type, 
+      product_size, 
+      product_price, 
+      product_image, 
+      product_description, 
+      product_status 
+    } = await req.json();
+    
+    if (!product_name || !product_type || !product_size || !product_price || !product_image || !product_description || !product_status) {
+      return new Response(
+        JSON.stringify({ message: "All fields are required" }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    const [result] = await pool.query(
+      "UPDATE product SET product_name = ?, product_type = ?, product_size = ?, product_price = ?, product_image = ?, product_description = ?, product_status = ? WHERE product_id = ?",
+      [product_name, product_type, product_size, product_price, product_image, product_description, product_status, product_id]
+    );
+
+    if (result.affectedRows === 0) {
+      return new Response(
+        JSON.stringify({ message: "Product not found" }),
+        {
+          status: 404,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    return new Response(
+      JSON.stringify({ message: "Product updated successfully" }),
+      {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+  } catch (error) {
+    return new Response(
+      JSON.stringify({
+        message: "Error updating product",
+        error: error.message,
+      }),
+      {
+        status: 500,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+  }
+}
+
+
 export async function DELETE(req, { params }) {
   try {
     const { id } = params;
@@ -51,7 +177,7 @@ export async function DELETE(req, { params }) {
 
     if (isNaN(product_id)) {
       return new Response(
-        JSON.stringify({ message: "Invalid product_ID" }),
+        JSON.stringify({ message: "Invalid product ID" }),
         {
           status: 400,
           headers: { "Content-Type": "application/json" },
@@ -86,7 +212,7 @@ export async function DELETE(req, { params }) {
   } catch (error) {
     return new Response(
       JSON.stringify({
-        message: "Error deleting product type",
+        message: "Error deleting product",
         error: error.message,
       }),
       {

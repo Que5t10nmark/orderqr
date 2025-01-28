@@ -2,8 +2,8 @@ import pool from "../../lib/db";
 
 export async function GET() {
   try {
-    const [products] = await pool.query("SELECT * FROM product");
-    return new Response(JSON.stringify(products), {
+    const [product] = await pool.query("SELECT * FROM product");
+    return new Response(JSON.stringify(product), {
       status: 200,
       headers: {
         "Content-Type": "application/json",
@@ -25,6 +25,7 @@ export async function GET() {
   }
 }
 
+// เพิ่มข้อมูลสินค้า
 export async function POST(req) {
   try {
     const {
@@ -37,18 +38,18 @@ export async function POST(req) {
       product_status,
     } = await req.json();
 
-    // Check for required fields
+    // ตรวจสอบค่าที่ส่งมาว่าถูกต้องและไม่ว่าง
     if (
       !product_name ||
       !product_type ||
-      !product_price ||
+      !product_price||
       !product_size ||
-      product_status === undefined ||
+      !product_status|| 
       !product_image ||
       !product_description
     ) {
       return new Response(
-        JSON.stringify({ message: "Missing required fields" }),
+        JSON.stringify({ message: "Missing or invalid required fields" }),
         {
           status: 400,
           headers: { "Content-Type": "application/json" },
@@ -56,6 +57,7 @@ export async function POST(req) {
       );
     }
 
+    // เพิ่มข้อมูลลงฐานข้อมูล
     const [result] = await pool.query(
       "INSERT INTO product (product_name, product_type, product_price, product_size, product_image, product_description, product_status) VALUES (?, ?, ?, ?, ?, ?, ?)",
       [
@@ -68,7 +70,12 @@ export async function POST(req) {
         product_status,
       ]
     );
-    
+
+    // ตรวจสอบว่าเพิ่มสำเร็จหรือไม่
+    if (result.affectedRows === 0) {
+      throw new Error("Failed to insert product");
+    }
+
     return new Response(
       JSON.stringify({
         id: result.insertId,
@@ -86,6 +93,7 @@ export async function POST(req) {
       }
     );
   } catch (error) {
+    console.error("Error adding product:", error.message);
     return new Response(
       JSON.stringify({
         message: "Error adding product",
@@ -98,4 +106,3 @@ export async function POST(req) {
     );
   }
 }
-

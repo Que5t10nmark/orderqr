@@ -1,17 +1,18 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import Modal from "../components/Modal";
-
+import Image
+ from "next/image";
 const ProductsPage = () => {
   const [products, setProducts] = useState([]);
   const [newProduct, setNewProduct] = useState({
     product_name: "",
+    product_type: "",
     product_price: "",
     product_size: "",
     product_image: "",
     product_description: "",
-    product_status: true,
-    product_type: "",
+    product_status: true
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -93,22 +94,22 @@ const ProductsPage = () => {
       setNewProduct({
         product_id: product.product_id,
         product_name: product.product_name,
+        product_type: product.product_type,
         product_size: product.product_size,
         product_price: product.product_price,
         product_image: product.product_image,
         product_description: product.product_description,
         product_status: product.product_status,
-        product_type: product.product_type,
       });
       setIsEditing(true);
     } else {
       setNewProduct({ product_name: "" });
+      setNewProduct({ product_type: "" });
       setNewProduct({ product_size: "" });
       setNewProduct({ product_price: "" });
       setNewProduct({ product_image: "" });
       setNewProduct({ product_description: "" });
       setNewProduct({ product_status: "" });
-      setNewProduct({ product_type: "" });
       setIsEditing(false);
     }
     setIsModalOpen(true);
@@ -118,12 +119,12 @@ const ProductsPage = () => {
     setIsModalOpen(false);
     setNewProduct({
       product_name: "",
+      product_type: "",
       product_price: "",
       product_size: "",
       product_image: "",
       product_description: "",
       product_status: true,
-      product_type: "",
     });
   };
 
@@ -145,6 +146,7 @@ const ProductsPage = () => {
   const clearForm = () => {
     setNewProduct({
       product_name: "",
+      product_type: "",
       product_price: "",
       product_size: "",
       product_image: "",
@@ -169,6 +171,7 @@ const ProductsPage = () => {
     setNewProduct({
       id: product.id,
       product_name: product.product_name,
+      product_type: product.product_type,
       product_price: product.product_price,
       product_size: product.product_size,
       product_image: product.product_image,
@@ -218,6 +221,7 @@ const ProductsPage = () => {
               <th className="px-4 py-2 border">ประเภทอาหาร</th>
               <th className="px-4 py-2 border">ราคา</th>
               <th className="px-4 py-2 border">ขนาด</th>
+              <th className="px-4 py-2 border">รูปภาพ</th>
               <th className="px-4 py-2 border">สถานะ</th>
               <th className="px-4 py-2 border">การจัดการ</th>
             </tr>
@@ -226,10 +230,10 @@ const ProductsPage = () => {
             {filteredProducts.map((product) => (
               <tr key={product.id}>
                 <td className="px-4 py-2 border">{product.product_name}</td>
-                <td className="px-4 py-2 border">
-                  {product.product_price} บาท
-                </td>
+                <td className="px-4 py-2 border">{product.product_type}</td>
+                <td className="px-4 py-2 border">{product.product_price}</td>
                 <td className="px-4 py-2 border">{product.product_size}</td>
+                <td className="px-4 py-2 border">{product.product_image}</td>
                 <td className="px-4 py-2 border">
                   {product.product_status ? "เปิดใช้งาน" : "ปิดการใช้งาน"}
                 </td>
@@ -255,7 +259,7 @@ const ProductsPage = () => {
 
       <Modal isOpen={isModalOpen} closeModal={closeModal}>
         <h2 className="text-xl font-semibold mb-4">
-          {isEditing ? "แก้ไขรายการอาหาร" : "เพิ่มรายการอาหารใหม่"}
+          {isEditing ? "เพิ่มรายการอาหาร" : "แก้ไขรายการอาหาร"}
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -273,6 +277,20 @@ const ProductsPage = () => {
             />
           </div>
 
+          <div>
+            <lable htmlFor="product_type" classname ="block">
+              ประเภทอาหาร
+            </lable>
+          <input
+            type="text"
+            id="product_type"
+            name="product_type"
+            value={newProduct.product_type}
+            onChange={handleChange}
+            required
+            className="w-full p-2 border border-gray-300 rounded"
+          />
+          </div>
           <div>
             <label htmlFor="product_price" className="block">
               ราคา
@@ -308,7 +326,7 @@ const ProductsPage = () => {
               รูปภาพ
             </label>
             <input
-              type="text"
+              type="string"
               id="product_image"
               name="product_image"
               value={newProduct.product_image}
@@ -348,7 +366,7 @@ const ProductsPage = () => {
               type="submit"
               className="bg-blue-500 text-white px-4 py-2 rounded"
             >
-              {isEditing ? "อัปเดต" : "เพิ่ม"}
+              {isEditing ? "บันทึก" : "อัปเดต"}
             </button>
             <button
               type="button"
