@@ -4,9 +4,12 @@ import Modal from "../components/Modal";
 
 const ProductTypePage = () => {
   const [productTypes, setProductTypes] = useState([]);
-  const [newProductType, setNewProductType] = useState({
-    product_type_name: "",
-  });
+  const [newProductType, setNewProductType] = useState(
+    {
+      product_type_name: "",
+    } || {}
+  );
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -220,7 +223,7 @@ const ProductTypePage = () => {
               type="text"
               id="product_type_name"
               name="product_type_name"
-              value={newProductType.product_type_name}
+              value={newProductType.product_type_name || ""}
               onChange={handleChange}
               required
               className="w-full p-2 border border-gray-300 rounded"

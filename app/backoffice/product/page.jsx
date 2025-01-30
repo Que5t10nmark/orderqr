@@ -5,15 +5,17 @@ import Image from "next/image";
 
 const ProductsPage = () => {
   const [product, setProduct] = useState([]);
-  const [newProduct, setNewProduct] = useState({
-    product_name: "",
-    product_type: "",
-    product_price: "",
-    product_size: "",
-    product_image: "",
-    product_description: "",
-    product_status: true,
-  });
+  const [newProduct, setNewProduct] = useState(
+    {
+      product_name: "",
+      product_type: "",
+      product_price: "",
+      product_size: "",
+      product_image: "",
+      product_description: "",
+      product_status: true,
+    } || {}
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -263,7 +265,7 @@ const ProductsPage = () => {
               type="text"
               id="product_name"
               name="product_name"
-              value={newProduct.product_name}
+              value={newProduct.product_name || ""}
               onChange={handleChange}
               required
               className="w-full p-2 border border-gray-300 rounded"
