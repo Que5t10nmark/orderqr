@@ -7,7 +7,12 @@ export default function Modal({ title, children, isOpen, onClose }) {
     isOpen && (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
         <div className="bg-white rounded-lg shadow-lg">
-          <h2>{title}</h2>
+          <h2>
+            {title}
+            <button className="float-right text-gray-300" onClick={onClose}>
+              <i className="fa-solid fa-xmark"></i>
+            </button>
+          </h2>
           <div className="mt-4 p-5">{children}</div>
         </div>
       </div>
