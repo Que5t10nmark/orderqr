@@ -1,28 +1,28 @@
-'use client';
+"use client";
 import { useEffect, useState, useCallback } from "react";
-import Modal from '../components/Modal';
+import Modal from "../components/Modal";
 
 const ProductTypePage = () => {
   const [productTypes, setProductTypes] = useState([]);
   const [newProductType, setNewProductType] = useState({
-    product_type_name: '',
+    product_type_name: "",
   });
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [notification, setNotification] = useState('');
+  const [notification, setNotification] = useState("");
 
   const fetchProductTypes = useCallback(async () => {
     setLoading(true);
-    setError('');
+    setError("");
     try {
-      const res = await fetch('/api/product_type');
-      if (!res.ok) throw new Error('Failed to fetch product types');
+      const res = await fetch("/api/product_type");
+      if (!res.ok) throw new Error("Failed to fetch product types");
       const data = await res.json();
       setProductTypes(data);
     } catch (err) {
-      setError('Error fetching product types: ' + err.message);
+      setError("Error fetching product types: " + err.message);
     } finally {
       setLoading(false);
     }
@@ -30,56 +30,63 @@ const ProductTypePage = () => {
 
   const addProductType = async (productTypeData) => {
     try {
-      const res = await fetch('/api/product_type', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/product_type", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(productTypeData),
       });
-      if (!res.ok) throw new Error('Failed to add product type');
+      if (!res.ok) throw new Error("Failed to add product type");
       const newProductType = await res.json();
-      setProductTypes((prevProductTypes) => [...prevProductTypes, newProductType]);
-      setNotification('เพิ่มประเภทอาหารสำเร็จ!');
-      setTimeout(() => setNotification(''), 3000);
+      setProductTypes((prevProductTypes) => [
+        ...prevProductTypes,
+        newProductType,
+      ]);
+      setNotification("เพิ่มประเภทอาหารสำเร็จ!");
+      setTimeout(() => setNotification(""), 3000);
     } catch (err) {
-      setError('Error adding product type: ' + err.message);
+      setError("Error adding product type: " + err.message);
     }
   };
 
   const updateProductType = async (productTypeId, productTypeData) => {
     try {
       const res = await fetch(`/api/product_type/${productTypeId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(productTypeData),
       });
-      if (!res.ok) throw new Error('Failed to update product type');
+      if (!res.ok) throw new Error("Failed to update product type");
       const updatedProductType = await res.json();
       setProductTypes((prevProductTypes) =>
         prevProductTypes.map((productType) =>
-          productType.product_type_id === productTypeId ? updatedProductType : productType
+          productType.product_type_id === productTypeId
+            ? updatedProductType
+            : productType
         )
       );
-      setNotification('แก้ไขประเภทอาหารสำเร็จ!');
-      setTimeout(() => setNotification(''), 3000);
+      setNotification("แก้ไขประเภทอาหารสำเร็จ!");
+      setTimeout(() => setNotification(""), 3000);
     } catch (err) {
-      setError('Error updating product type: ' + err.message);
+      setError("Error updating product type: " + err.message);
     }
   };
 
   const deleteProductType = async (productTypeId) => {
     try {
       const res = await fetch(`/api/product_type/${productTypeId}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
-      if (!res.ok) throw new Error('Failed to delete product type');
+      if (!res.ok) throw new Error("Failed to delete product type");
       setProductTypes((prevProductTypes) =>
-        prevProductTypes.filter((productType) => productType.product_type_id !== productTypeId)
+        prevProductTypes.filter(
+          (productType) => productType.product_type_id !== productTypeId
+        )
       );
-      setNotification('ลบประเภทอาหารสำเร็จ!');
-      setTimeout(() => setNotification(''), 3000);
+      setNotification("ลบประเภทอาหารสำเร็จ!");
+      setTimeout(() => setNotification(""), 3000);
       closeModal();
     } catch (err) {
-      setError('Error deleting product type: ' + err.message);
+      setError("Error deleting product type: " + err.message);
     }
   };
 
@@ -91,7 +98,7 @@ const ProductTypePage = () => {
       });
       setIsEditing(true);
     } else {
-      setNewProductType({ product_type_name: '' });
+      setNewProductType({ product_type_name: "" });
       setIsEditing(false);
     }
     setIsModalOpen(true);
@@ -99,7 +106,7 @@ const ProductTypePage = () => {
 
   const closeModal = () => {
     setIsModalOpen(false);
-    setNewProductType({ product_type_name: '' });
+    setNewProductType({ product_type_name: "" });
   };
 
   const handleChange = (e) => {
@@ -118,7 +125,7 @@ const ProductTypePage = () => {
   };
 
   const clearForm = () => {
-    setNewProductType({ product_type_name: '' });
+    setNewProductType({ product_type_name: "" });
   };
 
   useEffect(() => {
@@ -155,7 +162,9 @@ const ProductTypePage = () => {
           <tbody>
             {productTypes.map((productType) => (
               <tr key={productType.product_type_id}>
-                <td className="px-4 py-2 border">{productType.product_type_name}</td>
+                <td className="px-4 py-2 border">
+                  {productType.product_type_name}
+                </td>
                 <td className="px-4 py-2 border">
                   <button
                     onClick={() => openModal(productType)}
@@ -164,7 +173,9 @@ const ProductTypePage = () => {
                     แก้ไข
                   </button>
                   <button
-                    onClick={() => deleteProductType(productType.product_type_id)}
+                    onClick={() =>
+                      deleteProductType(productType.product_type_id)
+                    }
                     className="bg-red-500 text-white px-4 py-2 rounded"
                   >
                     ลบ
@@ -178,11 +189,13 @@ const ProductTypePage = () => {
 
       <Modal isOpen={isModalOpen} closeModal={closeModal}>
         <h2 className="text-xl font-semibold mb-4">
-          {isEditing ? 'แก้ไขประเภทอาหาร' : 'เพิ่มประเภทอาหารใหม่'}
+          {isEditing ? "แก้ไขประเภทอาหาร" : "เพิ่มประเภทอาหารใหม่"}
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="product_type_name" className="block">ชื่อประเภทอาหาร</label>
+            <label htmlFor="product_type_name" className="block">
+              ชื่อประเภทอาหาร
+            </label>
             <input
               type="text"
               id="product_type_name"
@@ -199,7 +212,7 @@ const ProductTypePage = () => {
               type="submit"
               className="bg-green-500 text-white px-6 py-2 rounded"
             >
-              {isEditing ? 'บันทึกการแก้ไข' : 'บันทึก'}
+              {isEditing ? "บันทึกการแก้ไข" : "บันทึก"}
             </button>
             <button
               type="button"

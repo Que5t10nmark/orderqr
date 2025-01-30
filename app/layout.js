@@ -22,7 +22,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="th">
       <body className="flex flex-col h-screen">
-        <NavBar />
+        {/* <NavBar /> */}
         <div className="flex flex-grow">
           <Sidebar />
           <main className="flex-grow p-6">{children}</main>
