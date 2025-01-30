@@ -11,45 +11,78 @@ async function handleDBQuery(query, params) {
 
 export async function GET(req, { params: { id } }) {
   const product_id = Number(id);
-  if (isNaN(product_id)) 
+  if (isNaN(product_id))
     return Response.json({ message: "Invalid product ID" }, { status: 400 });
-  const product = await handleDBQuery("SELECT * FROM product WHERE product_id = ?",
-     [product_id]);
+  const product = await handleDBQuery(
+    "SELECT * FROM product WHERE product_id = ?",
+    [product_id]
+  );
   return Response.json(
-    product.length ? product : { 
-      message: "Product not found" }, { 
-        status: product.length ? 200 : 404 });
+    product.length
+      ? product
+      : {
+          message: "Product not found",
+        },
+    {
+      status: product.length ? 200 : 404,
+    }
+  );
 }
 
 export async function POST(req) {
   const body = await req.json();
-  if (!body.product_name) 
+  if (!body.product_name)
     return Response.json({ message: "Missing product_name" }, { status: 400 });
-  const result = await handleDBQuery("INSERT INTO product SET ?", 
-    [body]);
-  return Response.json({ 
-    message: "Product added", product_id: result.insertId }, { status: 201 });
+  const result = await handleDBQuery("INSERT INTO product SET ?", [body]);
+  return Response.json(
+    {
+      message: "Product added",
+      product_id: result.insertId,
+    },
+    { status: 201 }
+  );
 }
 
-export async function PUT(req, { params: { id } }) {
+export async function PUT(req) {
+  const url = new URL(req.nextUrl);
+  const id = url.pathname.split("/").pop(); // ดึงค่าจาก URL
+
   const product_id = Number(id);
   const body = await req.json();
-  if (isNaN(product_id) || Object.values(body).some(v => !v)) 
+
+  if (isNaN(product_id) || Object.values(body).some((v) => !v))
     return Response.json({ message: "Invalid data" }, { status: 400 });
-  const result = await handleDBQuery("UPDATE product SET ? WHERE product_id = ?", 
-    [body, product_id]);
-  return Response.json({ 
-    message: result.affectedRows ? "Product updated" : "Product not found" }, { 
-      status: result.affectedRows ? 200 : 404 });
+
+  const result = await handleDBQuery(
+    "UPDATE product SET ? WHERE product_id = ?",
+    [body, product_id]
+  );
+
+  return Response.json(
+    {
+      message: result.affectedRows ? "Product updated" : "Product not found",
+    },
+    { status: result.affectedRows ? 200 : 404 }
+  );
 }
 
-export async function DELETE(req, { params: { id } }) {
+export async function DELETE(req) {
+  const url = new URL(req.nextUrl);
+  const id = url.pathname.split("/").pop();
+
   const product_id = Number(id);
-  if (isNaN(product_id)) 
+  if (isNaN(product_id))
     return Response.json({ message: "Invalid product ID" }, { status: 400 });
-  const result = await handleDBQuery("DELETE FROM product WHERE product_id = ?", 
-    [product_id]);
-  return Response.json({ 
-    message: result.affectedRows ? "Product deleted" : "Product not found" }, { 
-      status: result.affectedRows ? 200 : 404 });
+
+  const result = await handleDBQuery(
+    "DELETE FROM product WHERE product_id = ?",
+    [product_id]
+  );
+
+  return Response.json(
+    {
+      message: result.affectedRows ? "Product deleted" : "Product not found",
+    },
+    { status: result.affectedRows ? 200 : 404 }
+  );
 }

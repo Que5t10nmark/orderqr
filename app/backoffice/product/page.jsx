@@ -45,9 +45,13 @@ const ProductsPage = () => {
       });
       if (!res.ok) throw new Error("Failed to add product");
       const newProduct = await res.json();
+
+      // ✅ เพิ่มข้อมูลใหม่เข้า state product โดยตรง
       setProduct((prevProduct) => [...prevProduct, newProduct]);
+
       setNotification("เพิ่มประเภทอาหารสำเร็จ!");
       setTimeout(() => setNotification(""), 3000);
+      closeModal(); // ปิด Modal หลังจากบันทึก
     } catch (err) {
       setError("Error adding product: " + err.message);
     }
@@ -60,16 +64,16 @@ const ProductsPage = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(productData),
       });
-      if (!res.ok) throw new Error("Failed to update product ");
-      const updatedProduct = await res.json();
-      setProduct((prevProduct) =>
-        prevProduct.map((product) =>
-          product.product_id === productId ? updatedProduct : product
-        )
-      );
+      if (!res.ok) throw new Error("Failed to update product");
+
+      await res.json(); // อาจไม่ต้องใช้ค่าที่ส่งกลับมา
+      fetchProduct(); // ✅ ดึงข้อมูลใหม่ทันทีหลังจากแก้ไข
+
       setNotification("แก้ไขประเภทอาหารสำเร็จ!");
       setTimeout(() => setNotification(""), 3000);
+      closeModal();
     } catch (err) {
+      console.error("Error updating product:", err);
       setError("Error updating product type: " + err.message);
     }
   };
@@ -80,12 +84,15 @@ const ProductsPage = () => {
         method: "DELETE",
       });
       if (!res.ok) throw new Error("Failed to delete product");
+
+      // ✅ ลบข้อมูลออกจาก state product ทันที
       setProduct((prevProduct) =>
         prevProduct.filter((product) => product.product_id !== productId)
       );
+
       setNotification("ลบประเภทอาหารสำเร็จ!");
       setTimeout(() => setNotification(""), 3000);
-      closeModal();
+      closeModal(); // ปิด Modal หลังจากลบ
     } catch (err) {
       setError("Error deleting product type: " + err.message);
     }
@@ -163,7 +170,7 @@ const ProductsPage = () => {
   };
 
   const filteredProduct = product.filter((item) =>
-    item.product_name.toLowerCase().includes(searchQuery.toLowerCase())
+    (item?.product_name || "").toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -212,8 +219,8 @@ const ProductsPage = () => {
             </tr>
           </thead>
           <tbody>
-            {filteredProduct.map((product) => (
-              <tr key={product.product_id}>
+            {filteredProduct.map((product, index) => (
+              <tr key={product.product_id || `product-${index}`}>
                 <td className="px-4 py-2 border">{product.product_name}</td>
                 <td className="px-4 py-2 border">{product.product_type}</td>
                 <td className="px-4 py-2 border">{product.product_price}</td>

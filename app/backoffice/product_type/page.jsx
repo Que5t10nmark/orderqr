@@ -35,12 +35,20 @@ const ProductTypePage = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(productTypeData),
       });
+
       if (!res.ok) throw new Error("Failed to add product type");
+
       const newProductType = await res.json();
+
+      // ✅ อัปเดต state ทันทีโดยการเพิ่มข้อมูลใหม่เข้าไป
       setProductTypes((prevProductTypes) => [
         ...prevProductTypes,
-        newProductType,
+        {
+          product_type_id: newProductType.id, // ใช้ id ที่ส่งกลับมาจาก API
+          product_type_name: productTypeData.product_type_name,
+        },
       ]);
+
       setNotification("เพิ่มประเภทอาหารสำเร็จ!");
       setTimeout(() => setNotification(""), 3000);
     } catch (err) {
@@ -55,15 +63,24 @@ const ProductTypePage = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(productTypeData),
       });
+
       if (!res.ok) throw new Error("Failed to update product type");
+
+      // ใช้ข้อมูลจาก API response โดยตรง
       const updatedProductType = await res.json();
+
+      // อัปเดตค่า state ทันทีโดยใช้ map()
       setProductTypes((prevProductTypes) =>
         prevProductTypes.map((productType) =>
           productType.product_type_id === productTypeId
-            ? updatedProductType
+            ? {
+                ...productType,
+                product_type_name: productTypeData.product_type_name,
+              }
             : productType
         )
       );
+
       setNotification("แก้ไขประเภทอาหารสำเร็จ!");
       setTimeout(() => setNotification(""), 3000);
     } catch (err) {
@@ -76,15 +93,18 @@ const ProductTypePage = () => {
       const res = await fetch(`/api/product_type/${productTypeId}`, {
         method: "DELETE",
       });
+
       if (!res.ok) throw new Error("Failed to delete product type");
+
+      // ✅ อัปเดต state ให้ UI เปลี่ยนทันที
       setProductTypes((prevProductTypes) =>
         prevProductTypes.filter(
           (productType) => productType.product_type_id !== productTypeId
         )
       );
+
       setNotification("ลบประเภทอาหารสำเร็จ!");
       setTimeout(() => setNotification(""), 3000);
-      closeModal();
     } catch (err) {
       setError("Error deleting product type: " + err.message);
     }
@@ -160,8 +180,8 @@ const ProductTypePage = () => {
             </tr>
           </thead>
           <tbody>
-            {productTypes.map((productType) => (
-              <tr key={productType.product_type_id}>
+            {productTypes.map((productType, index) => (
+              <tr key={productType.product_type_id || index}>
                 <td className="px-4 py-2 border">
                   {productType.product_type_name}
                 </td>

@@ -53,13 +53,14 @@ export async function GET(req, { params }) {
 
 export async function POST(req) {
   try {
-
     const body = await req.json();
     const { product_type_name } = body || {};
 
     if (!product_type_name) {
       return new Response(
-        JSON.stringify({ message: "Missing required field: product_type_name" }),
+        JSON.stringify({
+          message: "Missing required field: product_type_name",
+        }),
         { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
@@ -75,7 +76,7 @@ export async function POST(req) {
         { status: 500, headers: { "Content-Type": "application/json" } }
       );
     }
-    
+
     return new Response(
       JSON.stringify({
         message: "Product type added successfully",
@@ -94,17 +95,17 @@ export async function POST(req) {
   }
 }
 
-
 export async function PUT(req, { params }) {
   try {
-    const { id } = params;
+    // ใช้ await ในการดึง params.id
+    const { id } = await params;
     const product_type_id = Number(id);
 
-    if (isNaN(product_type_id)) {
+    if (!product_type_id || isNaN(product_type_id)) {
       return new Response(
         JSON.stringify({ message: "Invalid product type ID" }),
         {
-          status: 400, 
+          status: 400,
           headers: { "Content-Type": "application/json" },
         }
       );
@@ -161,20 +162,13 @@ export async function PUT(req, { params }) {
   }
 }
 
-export async function DELETE(req, { params }) {
+export async function DELETE(req, context) {
   try {
-    const { id } = params;
+    // ✅ ต้องใช้ await เพื่อดึงค่า params
+    const { id } = await context.params;
     const product_type_id = Number(id);
 
-    if (isNaN(product_type_id)) {
-      return new Response(
-        JSON.stringify({ message: "Invalid product type ID" }),
-        {
-          status: 400,
-          headers: { "Content-Type": "application/json" },
-        }
-      );
-    }
+    console.log("Deleting Product Type ID:", product_type_id);
 
     const [result] = await pool.query(
       "DELETE FROM product_type WHERE product_type_id = ?",
@@ -195,9 +189,7 @@ export async function DELETE(req, { params }) {
       JSON.stringify({ message: "Product type deleted successfully" }),
       {
         status: 200,
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
       }
     );
   } catch (error) {
@@ -208,9 +200,7 @@ export async function DELETE(req, { params }) {
       }),
       {
         status: 500,
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
       }
     );
   }
