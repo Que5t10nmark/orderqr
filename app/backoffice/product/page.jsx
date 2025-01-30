@@ -264,9 +264,9 @@ const ProductsPage = () => {
           </div>
 
           <div>
-            <lable htmlFor="product_type" classname="block">
+            <label htmlFor="product_type" className="block">
               ประเภทอาหาร
-            </lable>
+            </label>
             <input
               type="text"
               id="product_type"
