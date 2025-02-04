@@ -87,7 +87,7 @@ const ProductsPage = () => {
       });
       if (!res.ok) throw new Error("Failed to delete product");
 
-      // ✅ ลบข้อมูลออกจาก state product ทันที
+      // ลบข้อมูลออกจาก state product ทันที
       setProduct((prevProduct) =>
         prevProduct.filter((product) => product.product_id !== productId)
       );
