@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import Modal from "../components/Modal";
+import Link from "next/link";
 import Image from "next/image";
 
 const ProductsPage = () => {
@@ -321,7 +322,7 @@ const ProductsPage = () => {
               รูปภาพ
             </label>
             <input
-              type="text"
+              type="file"
               id="product_image"
               name="product_image"
               value={newProduct.product_image}
