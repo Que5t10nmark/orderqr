@@ -134,10 +134,50 @@ const ProductsPage = () => {
     });
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
+  const [productType, setProductType] = useState([]);
+
+  useEffect(() => {
+    const fetchProductType = async () => {
+      try {
+        const res = await fetch("/api/product_type");
+        if (!res.ok) throw new Error("Failed to fetch product types");
+        const data = await res.json();
+        setProductType(data); // ✅ เก็บประเภทสินค้าใน State
+      } catch (err) {
+        console.error("Error fetching product types:", err);
+      }
+    };
+  
+    fetchProductType();
+  }, []);
+  
+
+const [previewImage, setPreviewImage] = useState(null); // ✅ เพิ่ม state เก็บรูป
+
+const handleChange = (e) => {
+  const { name, value, type, files } = e.target;
+
+  if (type === "file" && files.length > 0) {
+    const file = files[0];
+    setNewProduct((prev) => ({ ...prev, product_image: file }));
+    setPreviewImage(URL.createObjectURL(file));
+  } else {
     setNewProduct((prev) => ({ ...prev, [name]: value }));
-  };
+  }
+};
+
+{(previewImage || newProduct.product_image) && (
+  <div className="mb-4">
+    <p className="text-gray-600">รูปภาพตัวอย่าง:</p>
+    <Image
+      src={previewImage || `/uploads/${newProduct.product_image}`} // ✅ แสดงภาพ
+      alt="Preview"
+      width={150}
+      height={150}
+      className="rounded border"
+    />
+  </div>
+)}
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -228,7 +268,19 @@ const ProductsPage = () => {
                 <td className="px-4 py-2 border">{product.product_type}</td>
                 <td className="px-4 py-2 border">{product.product_price}</td>
                 <td className="px-4 py-2 border">{product.product_size}</td>
-                <td className="px-4 py-2 border">{product.product_image}</td>
+                <td className="px-4 py-2 border text-center">
+                    {product.product_image ? (
+                    <Image
+                        src={`/uploads/${product.product_image}`}
+                        alt={product.product_name}
+                        width={50}
+                        height={50}
+                        className="rounded border"
+                      />
+                    ) : (
+                        <p className="text-gray-400">ไม่มีรูป</p>
+                   )}
+                </td>
                 <td className="px-4 py-2 border">
                   {product.product_description}
                 </td>
@@ -275,18 +327,25 @@ const ProductsPage = () => {
 
           <div>
             <label htmlFor="product_type" className="block">
-              ประเภทอาหาร
-            </label>
-            <input
-              type="text"
-              id="product_type"
-              name="product_type"
-              value={newProduct.product_type}
-              onChange={handleChange}
-              required
-              className="w-full p-2 border border-gray-300 rounded"
-            />
-          </div>
+              ประเภทสินค้า
+              </label>
+                <select
+                    id="product_type"
+                    name="product_type"
+                    value={newProduct.product_type}
+                    onChange={handleChange}
+                    required
+                className="w-full p-2 border border-gray-300 rounded"
+               >
+                <option value="">เลือกประเภทสินค้า</option>
+                {productType.map((product_type) => (
+                  <option key={product_type.product_type_id} value={product_type.product_type_id}>
+                    {product_type.product_type_name}
+                    </option>
+                  ))}
+                  </select>
+             </div>
+
           <div>
             <label htmlFor="product_price" className="block">
               ราคา
@@ -325,9 +384,12 @@ const ProductsPage = () => {
               type="file"
               id="product_image"
               name="product_image"
-              value={newProduct.product_image}
-              onChange={handleChange}
-              required
+              onChange={(e) => {
+                const file = e.target.files[0];
+                if (file) {
+                  setNewProduct((prev) => ({ ...prev, product_image: file }));
+                }
+              }}
               className="w-full p-2 border border-gray-300 rounded"
             />
           </div>
