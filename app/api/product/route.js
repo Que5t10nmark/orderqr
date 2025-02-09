@@ -2,7 +2,11 @@ import pool from "../../lib/db";
 
 export async function GET() {
   try {
-    const [product] = await pool.query("SELECT * FROM product");
+    const [product] = await pool.query(`
+      SELECT p.*, pt.product_type_name 
+      FROM product p
+      JOIN product_type pt ON p.product_type = pt.product_type_id
+    `);
     return new Response(JSON.stringify(product), {
       status: 200,
       headers: {
@@ -42,11 +46,10 @@ export async function POST(req) {
     if (
       !product_name ||
       !product_type ||
-      !product_price||
+      !product_price ||
       !product_size ||
-      !product_status|| 
-      !product_image ||
-      !product_description
+      !product_status ||
+      !product_image
     ) {
       return new Response(
         JSON.stringify({ message: "Missing or invalid required fields" }),
@@ -56,6 +59,9 @@ export async function POST(req) {
         }
       );
     }
+
+    // ถ้าไม่มี product_description ให้ใส่เป็นค่าว่าง ("")
+    const productDescription = product_description || "";
 
     // เพิ่มข้อมูลลงฐานข้อมูล
     const [result] = await pool.query(

@@ -147,37 +147,38 @@ const ProductsPage = () => {
         console.error("Error fetching product types:", err);
       }
     };
-  
+
     fetchProductType();
   }, []);
-  
 
-const [previewImage, setPreviewImage] = useState(null); // ✅ เพิ่ม state เก็บรูป
+  const [previewImage, setPreviewImage] = useState(null); // ✅ เพิ่ม state เก็บรูป
 
-const handleChange = (e) => {
-  const { name, value, type, files } = e.target;
+  const handleChange = (e) => {
+    const { name, value, type, files } = e.target;
 
-  if (type === "file" && files.length > 0) {
-    const file = files[0];
-    setNewProduct((prev) => ({ ...prev, product_image: file }));
-    setPreviewImage(URL.createObjectURL(file));
-  } else {
-    setNewProduct((prev) => ({ ...prev, [name]: value }));
+    if (type === "file" && files.length > 0) {
+      const file = files[0];
+      setNewProduct((prev) => ({ ...prev, product_image: file }));
+      setPreviewImage(URL.createObjectURL(file));
+    } else {
+      setNewProduct((prev) => ({ ...prev, [name]: value }));
+    }
+  };
+
+  {
+    (previewImage || newProduct.product_image) && (
+      <div className="mb-4">
+        <p className="text-gray-600">รูปภาพตัวอย่าง:</p>
+        <Image
+          src={previewImage || `/uploads/${newProduct.product_image}`} // ✅ แสดงภาพ
+          alt="Preview"
+          width={150}
+          height={150}
+          className="rounded border"
+        />
+      </div>
+    );
   }
-};
-
-{(previewImage || newProduct.product_image) && (
-  <div className="mb-4">
-    <p className="text-gray-600">รูปภาพตัวอย่าง:</p>
-    <Image
-      src={previewImage || `/uploads/${newProduct.product_image}`} // ✅ แสดงภาพ
-      alt="Preview"
-      width={150}
-      height={150}
-      className="rounded border"
-    />
-  </div>
-)}
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -265,21 +266,23 @@ const handleChange = (e) => {
             {filteredProduct.map((product, index) => (
               <tr key={product.product_id || `product-${index}`}>
                 <td className="px-4 py-2 border">{product.product_name}</td>
-                <td className="px-4 py-2 border">{product.product_type}</td>
+                <td className="px-4 py-2 border">
+                  {product.product_type_name}
+                </td>
                 <td className="px-4 py-2 border">{product.product_price}</td>
                 <td className="px-4 py-2 border">{product.product_size}</td>
                 <td className="px-4 py-2 border text-center">
-                    {product.product_image ? (
+                  {product.product_image ? (
                     <Image
-                        src={`/uploads/${product.product_image}`}
-                        alt={product.product_name}
-                        width={50}
-                        height={50}
-                        className="rounded border"
-                      />
-                    ) : (
-                        <p className="text-gray-400">ไม่มีรูป</p>
-                   )}
+                      src={`/uploads/${product.product_image}`}
+                      alt={product.product_name}
+                      width={50}
+                      height={50}
+                      className="rounded border"
+                    />
+                  ) : (
+                    <p className="text-gray-400">ไม่มีรูป</p>
+                  )}
                 </td>
                 <td className="px-4 py-2 border">
                   {product.product_description}
@@ -328,23 +331,26 @@ const handleChange = (e) => {
           <div>
             <label htmlFor="product_type" className="block">
               ประเภทสินค้า
-              </label>
-                <select
-                    id="product_type"
-                    name="product_type"
-                    value={newProduct.product_type}
-                    onChange={handleChange}
-                    required
-                className="w-full p-2 border border-gray-300 rounded"
-               >
-                <option value="">เลือกประเภทสินค้า</option>
-                {productType.map((product_type) => (
-                  <option key={product_type.product_type_id} value={product_type.product_type_id}>
-                    {product_type.product_type_name}
-                    </option>
-                  ))}
-                  </select>
-             </div>
+            </label>
+            <select
+              id="product_type"
+              name="product_type"
+              value={newProduct.product_type}
+              onChange={handleChange}
+              required
+              className="w-full p-2 border border-gray-300 rounded"
+            >
+              <option value="">เลือกประเภทสินค้า</option>
+              {productType.map((product_type) => (
+                <option
+                  key={product_type.product_type_id}
+                  value={product_type.product_type_id}
+                >
+                  {product_type.product_type_name}
+                </option>
+              ))}
+            </select>
+          </div>
 
           <div>
             <label htmlFor="product_price" className="block">
@@ -402,9 +408,8 @@ const handleChange = (e) => {
               type="text"
               id="product_description"
               name="product_description"
-              value={newProduct.product_description}
+              value={newProduct.product_description || ""}
               onChange={handleChange}
-              required
               className="w-full p-2 border border-gray-300 rounded"
             />
           </div>

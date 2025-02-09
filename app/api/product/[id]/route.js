@@ -14,9 +14,15 @@ export async function GET(req, { params: { id } }) {
   if (isNaN(product_id))
     return Response.json({ message: "Invalid product ID" }, { status: 400 });
   const product = await handleDBQuery(
-    "SELECT * FROM product WHERE product_id = ?",
+    `
+    SELECT p.*, pt.product_type_name 
+    FROM product p
+    JOIN product_type pt ON p.product_type = pt.product_type_id
+    WHERE p.product_id = ?
+    `,
     [product_id]
   );
+
   return Response.json(
     product.length
       ? product
