@@ -264,7 +264,14 @@ const ProductsPage = () => {
           </thead>
           <tbody>
             {filteredProduct.map((product, index) => (
-              <tr key={product.product_id || `product-${index}`}>
+              <tr
+                key={product.product_id || `product-${index}`}
+                className={
+                  product.product_status_name === "ไม่มีสินค้า"
+                    ? "bg-gray-300"
+                    : ""
+                }
+              >
                 <td className="px-4 py-2 border">{product.product_name}</td>
                 <td className="px-4 py-2 border">
                   {product.product_type_name}
@@ -287,7 +294,9 @@ const ProductsPage = () => {
                 <td className="px-4 py-2 border">
                   {product.product_description}
                 </td>
-                <td className="px-4 py-2 border">{product.product_status}</td>
+                <td className="px-4 py-2 border">
+                  {product.product_status_name}
+                </td>
                 <td className="px-4 py-2 border">
                   <button
                     onClick={() => openModal(product)}
@@ -416,17 +425,19 @@ const ProductsPage = () => {
 
           <div>
             <label htmlFor="product_status" className="block">
-              สถานะ
+              สถานะสินค้า
             </label>
-            <input
-              type="text"
+            <select
               id="product_status"
               name="product_status"
               value={newProduct.product_status}
               onChange={handleChange}
               required
               className="w-full p-2 border border-gray-300 rounded"
-            />
+            >
+              <option value="1">มีสินค้า</option>
+              <option value="0">ไม่มีสินค้า</option>
+            </select>
           </div>
 
           <div className="mt-4 flex gap-4">

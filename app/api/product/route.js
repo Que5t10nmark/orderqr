@@ -3,10 +3,15 @@ import pool from "../../lib/db";
 export async function GET() {
   try {
     const [product] = await pool.query(`
-      SELECT p.*, pt.product_type_name 
+      SELECT p.*, pt.product_type_name, 
+        CASE 
+          WHEN p.product_status = 1 THEN 'มีสินค้า' 
+          ELSE 'ไม่มีสินค้า' 
+        END AS product_status_name
       FROM product p
       JOIN product_type pt ON p.product_type = pt.product_type_id
     `);
+
     return new Response(JSON.stringify(product), {
       status: 200,
       headers: {
@@ -48,7 +53,7 @@ export async function POST(req) {
       !product_type ||
       !product_price ||
       !product_size ||
-      !product_status ||
+      product_status === undefined ||
       !product_image
     ) {
       return new Response(
