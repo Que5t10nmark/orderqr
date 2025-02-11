@@ -51,9 +51,9 @@ export async function POST(req) {
     if (
       !product_name ||
       !product_type ||
-      !product_price ||
+      product_price === "" ||
       !product_size ||
-      product_status === undefined ||
+      !product_status ||
       !product_image
     ) {
       return new Response(

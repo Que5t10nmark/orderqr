@@ -6,17 +6,16 @@ import Image from "next/image";
 
 const ProductsPage = () => {
   const [product, setProduct] = useState([]);
-  const [newProduct, setNewProduct] = useState(
-    {
-      product_name: "",
-      product_type: "",
-      product_price: "",
-      product_size: "",
-      product_image: "",
-      product_description: "",
-      product_status: true,
-    } || {}
-  );
+  const [newProduct, setNewProduct] = useState({
+    product_name: "",
+    product_type: "",
+    product_price: "",
+    product_size: "",
+    product_image: null,
+    product_description: "",
+    product_status: "1",
+  });
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -108,9 +107,9 @@ const ProductsPage = () => {
         product_name: product.product_name,
         product_type: product.product_type,
         product_price: product.product_price,
-        product_size: product.product_size,
+        product_size: product.product_size || "",
         product_image: product.product_image,
-        product_description: product.product_description,
+        product_description: product.product_description || "",
         product_status: product.product_status,
       });
       setIsEditing(true);
@@ -366,11 +365,15 @@ const ProductsPage = () => {
               ราคา
             </label>
             <input
-              type="string"
+              type="number"
               id="product_price"
               name="product_price"
-              value={newProduct.product_price}
-              onChange={handleChange}
+              value={newProduct.product_price || ""}
+              onChange={(e) => {
+                const value =
+                  e.target.value === "" ? "" : Number(e.target.value); // ✅ ให้แน่ใจว่าค่าเป็นตัวเลข
+                setNewProduct((prev) => ({ ...prev, product_price: value }));
+              }}
               required
               className="w-full p-2 border border-gray-300 rounded"
             />
@@ -384,8 +387,13 @@ const ProductsPage = () => {
               type="text"
               id="product_size"
               name="product_size"
-              value={newProduct.product_size}
-              onChange={handleChange}
+              value={newProduct.product_size || ""} // ✅ ป้องกัน undefined
+              onChange={(e) =>
+                setNewProduct((prev) => ({
+                  ...prev,
+                  product_size: e.target.value,
+                }))
+              }
               required
               className="w-full p-2 border border-gray-300 rounded"
             />
