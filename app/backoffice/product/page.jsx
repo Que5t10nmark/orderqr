@@ -1,7 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import Modal from "../components/Modal";
-import Link from "next/link";
 import Image from "next/image";
 
 const ProductsPage = () => {
@@ -14,8 +13,8 @@ const ProductsPage = () => {
       product_size: "",
       product_image: "",
       product_description: "",
-      product_status: true,
-    } || {}
+      product_status: "1",
+    }
   );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -102,25 +101,33 @@ const ProductsPage = () => {
   };
 
   const openModal = (product = null) => {
-    if (product) {
-      setNewProduct({
-        product_id: product.product_id,
-        product_name: product.product_name,
-        product_type: product.product_type,
-        product_price: product.product_price,
-        product_size: product.product_size,
-        product_image: product.product_image,
-        product_description: product.product_description,
-        product_status: product.product_status,
-      });
-      setIsEditing(true);
-    } else {
-      setNewProduct({ product_name: "" });
-      setIsEditing(false);
-    }
+    setNewProduct(
+      product
+        ? {
+            product_id: product.product_id ?? "",
+            product_name: product.product_name ?? "",
+            product_type: product.product_type ?? "",
+            product_price: product.product_price ?? "",
+            product_size: product.product_size ?? "",
+            product_image: product.product_image ?? "",
+            product_description: product.product_description ?? "",
+            product_status: product.product_status ?? true,
+          }
+        : {
+            product_name: "",
+            product_type: "",
+            product_price: "",
+            product_size: "",
+            product_image: "",
+            product_description: "",
+            product_status: true,
+          }
+    );
+  
+    setIsEditing(!!product);
     setIsModalOpen(true);
   };
-
+  
   const closeModal = () => {
     setIsModalOpen(false);
     setNewProduct({
@@ -130,9 +137,10 @@ const ProductsPage = () => {
       product_size: "",
       product_image: "",
       product_description: "",
-      product_status: "",
+      product_status: true,
     });
   };
+  
 
   const [productType, setProductType] = useState([]);
 
@@ -155,15 +163,18 @@ const ProductsPage = () => {
 
   const handleChange = (e) => {
     const { name, value, type, files } = e.target;
-
+  
+    setNewProduct((prev) => ({
+      ...prev,
+      [name]: type === "file" ? prev.product_image : value ?? "", // ✅ ไม่เก็บ object
+    }));
+  
     if (type === "file" && files.length > 0) {
-      const file = files[0];
-      setNewProduct((prev) => ({ ...prev, product_image: file }));
-      setPreviewImage(URL.createObjectURL(file));
-    } else {
-      setNewProduct((prev) => ({ ...prev, [name]: value }));
+      setPreviewImage(URL.createObjectURL(files[0]));
     }
   };
+  
+  
 
   {
     (previewImage || newProduct.product_image) && (
@@ -180,16 +191,101 @@ const ProductsPage = () => {
     );
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (isEditing) {
-      updateProduct(newProduct.product_id, newProduct);
-    } else {
-      addProduct(newProduct);
+  
+    let productId = newProduct.product_id;
+  
+    if (!isEditing) {
+      // ✅ กรณีเพิ่มสินค้าใหม่ (`POST`)
+      try {
+        const res = await fetch("/api/product", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(newProduct),
+        });
+  
+        const responseData = await res.json();
+        console.log("🔹 Response from API (POST):", responseData);
+  
+        if (!res.ok) throw new Error(responseData.message || "❌ Failed to add product");
+  
+        productId = responseData.id; // ✅ เก็บ `id` ที่ API ส่งกลับมา
+        console.log("✅ New product added with ID:", productId);
+        setNotification("✅ เพิ่มข้อมูลสำเร็จ!");
+        closeModal(); 
+      } catch (err) {
+        console.error("❌ Error adding product:", err);
+        setError("❌ Error adding product: " + err.message);
+        return;
+      }
     }
-    closeModal();
+  
+    // ✅ กรณีแก้ไขสินค้า (`PUT`)
+    if (isEditing) {
+      if (!productId) {
+        setError("❌ Missing product ID for update");
+        return;
+      }
+  
+      try {
+        console.log("🔹 Sending update request for product_id:", productId);
+  
+        const res = await fetch(`/api/product/${productId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(newProduct),
+        });
+  
+        const responseData = await res.json();
+        console.log("🔹 Response from server (PUT):", responseData);
+  
+        if (!res.ok) throw new Error(responseData.message || "❌ Failed to update product");
+  
+        fetchProduct();
+        setNotification("✅ แก้ไขข้อมูลสำเร็จ!");
+        setTimeout(() => setNotification(""), 3000);
+        closeModal();
+      } catch (err) {
+        console.error("❌ Error updating product:", err);
+        setError("❌ Error updating product: " + err.message);
+      }
+    }
   };
+  
+  
 
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+  
+    const formData = new FormData();
+    formData.append("file", file);
+  
+    try {
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+  
+      const data = await res.json();
+      if (res.ok) {
+        console.log("✅ Uploaded file:", data.fileName);
+        setNewProduct((prev) => ({ ...prev, product_image: data.fileName }));
+      } else {
+        throw new Error(data.message);
+      }
+    } catch (err) {
+      console.error("❌ Error uploading file:", err);
+      setError("Error uploading file: " + err.message);
+    }
+  };
+  
+  
+  
+  
+   
+  
   const clearForm = () => {
     setNewProduct({
       product_name: "",
@@ -281,12 +377,12 @@ const ProductsPage = () => {
                 <td className="px-4 py-2 border text-center">
                   {product.product_image ? (
                     <Image
-                      src={`/uploads/${product.product_image}`}
-                      alt={product.product_name}
-                      width={50}
-                      height={50}
-                      className="rounded border"
-                    />
+  src={`/uploads/${product.product_image || "placeholder.jpg"}`}
+  alt={product.product_name || "No Image"}
+  width={50}
+  height={50}
+  className="rounded border"
+/>
                   ) : (
                     <p className="text-gray-400">ไม่มีรูป</p>
                   )}
@@ -330,7 +426,7 @@ const ProductsPage = () => {
               type="text"
               id="product_name"
               name="product_name"
-              value={newProduct.product_name || ""}
+              value={newProduct.product_name ?? ""}
               onChange={handleChange}
               required
               className="w-full p-2 border border-gray-300 rounded"
@@ -344,20 +440,21 @@ const ProductsPage = () => {
             <select
               id="product_type"
               name="product_type"
-              value={newProduct.product_type}
+              value={newProduct.product_type ?? ""}
               onChange={handleChange}
               required
               className="w-full p-2 border border-gray-300 rounded"
             >
               <option value="">เลือกประเภทสินค้า</option>
-              {productType.map((product_type) => (
-                <option
-                  key={product_type.product_type_id}
-                  value={product_type.product_type_id}
-                >
-                  {product_type.product_type_name}
-                </option>
-              ))}
+              {productType.length > 0 ? (
+                productType.map((product_type) => (
+                  <option key={product_type.product_type_id} value={product_type.product_type_id}>
+                    {product_type.product_type_name}
+                  </option>
+                ))
+              ) : (
+                <option disabled>ไม่มีข้อมูลประเภทสินค้า</option>
+              )}
             </select>
           </div>
 
@@ -399,12 +496,7 @@ const ProductsPage = () => {
               type="file"
               id="product_image"
               name="product_image"
-              onChange={(e) => {
-                const file = e.target.files[0];
-                if (file) {
-                  setNewProduct((prev) => ({ ...prev, product_image: file }));
-                }
-              }}
+              onChange={handleFileUpload}
               className="w-full p-2 border border-gray-300 rounded"
             />
           </div>
@@ -430,7 +522,7 @@ const ProductsPage = () => {
             <select
               id="product_status"
               name="product_status"
-              value={newProduct.product_status}
+              value={newProduct.product_status?.toString() ?? "1"} // ✅ แปลงเป็น string
               onChange={handleChange}
               required
               className="w-full p-2 border border-gray-300 rounded"

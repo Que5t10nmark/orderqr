@@ -1,43 +1,37 @@
-import multer from "multer";
-import path from "path";
-import fs from "fs";
-import nc from "next-connect"; // ใช้ next-connect เพื่อรองรับ multipart form data
+import { NextResponse } from "next/server";
+import { writeFile } from "fs/promises";
+import { join } from "path";
 
-// สร้างโฟลเดอร์ `public/uploads` หากยังไม่มี
-const uploadDir = path.join(process.cwd(), "public/uploads");
-if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+export async function POST(req) {
+  try {
+    // ✅ ใช้ `req.formData()` เพื่อดึงข้อมูลไฟล์จากฟอร์ม
+    const formData = await req.formData();
+    const file = formData.get("file");
 
-// กำหนดค่าการเก็บไฟล์ (Multer)
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, uploadDir),
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
-  },
-});
+    if (!file) {
+      return NextResponse.json({ message: "❌ No file uploaded" }, { status: 400 });
+    }
 
-const upload = multer({ storage });
+    // ✅ อ่านข้อมูลไฟล์
+    const fileBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(fileBuffer);
 
-const apiRoute = nc({
-  onError(error, req, res) {
-    res.status(500).json({ error: error.message });
-  },
-  onNoMatch(req, res) {
-    res.status(405).json({ error: "Method Not Allowed" });
-  },
-});
+    // ✅ ตั้งชื่อไฟล์ใหม่
+    const ext = file.name.split(".").pop();
+    const fileName = `${Date.now()}.${ext}`;
+    const filePath = join(process.cwd(), "public/uploads", fileName);
 
-apiRoute.use(upload.single("file"));
+    // ✅ บันทึกไฟล์ไปที่ `public/uploads`
+    await writeFile(filePath, buffer);
 
-apiRoute.post((req, res) => {
-  const imageUrl = `/uploads/${req.file.filename}`; // เส้นทางของรูปภาพที่อัปโหลด
-  res.status(200).json({ url: imageUrl });
-});
-
-export default apiRoute;
-
-export const config = {
-  api: {
-    bodyParser: false, // ปิดค่าเริ่มต้นของ bodyParser เพื่อรองรับ multipart form data
-  },
-};
+    return NextResponse.json(
+      { message: "✅ File uploaded successfully", fileName },
+      { status: 200 }
+    );
+  } catch (error) {
+    return NextResponse.json(
+      { message: "❌ Error uploading file", error: error.message },
+      { status: 500 }
+    );
+  }
+}
