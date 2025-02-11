@@ -45,8 +45,15 @@ export async function POST(req) {
       product_status,
     } = await req.json();
 
-    // ✅ ตรวจสอบค่าที่จำเป็นต้องมี
-    if (!product_name || !product_type || !product_price || !product_size || product_status === undefined) {
+    // ตรวจสอบค่าที่ส่งมาว่าถูกต้องและไม่ว่าง
+    if (
+      !product_name ||
+      !product_type ||
+      !product_price ||
+      !product_size ||
+      product_status === undefined ||
+      !product_image
+    ) {
       return new Response(
         JSON.stringify({ message: "❌ Missing or invalid required fields" }),
         {

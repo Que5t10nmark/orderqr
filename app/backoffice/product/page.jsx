@@ -13,8 +13,8 @@ const ProductsPage = () => {
       product_size: "",
       product_image: "",
       product_description: "",
-      product_status: "1",
-    }
+      product_status: true,
+    } || {}
   );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -101,30 +101,22 @@ const ProductsPage = () => {
   };
 
   const openModal = (product = null) => {
-    setNewProduct(
-      product
-        ? {
-            product_id: product.product_id ?? "",
-            product_name: product.product_name ?? "",
-            product_type: product.product_type ?? "",
-            product_price: product.product_price ?? "",
-            product_size: product.product_size ?? "",
-            product_image: product.product_image ?? "",
-            product_description: product.product_description ?? "",
-            product_status: product.product_status ?? true,
-          }
-        : {
-            product_name: "",
-            product_type: "",
-            product_price: "",
-            product_size: "",
-            product_image: "",
-            product_description: "",
-            product_status: true,
-          }
-    );
-  
-    setIsEditing(!!product);
+    if (product) {
+      setNewProduct({
+        product_id: product.product_id,
+        product_name: product.product_name,
+        product_type: product.product_type,
+        product_price: product.product_price,
+        product_size: product.product_size,
+        product_image: product.product_image,
+        product_description: product.product_description,
+        product_status: product.product_status,
+      });
+      setIsEditing(true);
+    } else {
+      setNewProduct({ product_name: "" });
+      setIsEditing(false);
+    }
     setIsModalOpen(true);
   };
   
@@ -463,11 +455,15 @@ const ProductsPage = () => {
               ราคา
             </label>
             <input
-              type="string"
+              type="number"
               id="product_price"
               name="product_price"
-              value={newProduct.product_price}
-              onChange={handleChange}
+              value={newProduct.product_price || ""}
+              onChange={(e) => {
+                const value =
+                  e.target.value === "" ? "" : Number(e.target.value); // ✅ ให้แน่ใจว่าค่าเป็นตัวเลข
+                setNewProduct((prev) => ({ ...prev, product_price: value }));
+              }}
               required
               className="w-full p-2 border border-gray-300 rounded"
             />
@@ -481,8 +477,13 @@ const ProductsPage = () => {
               type="text"
               id="product_size"
               name="product_size"
-              value={newProduct.product_size}
-              onChange={handleChange}
+              value={newProduct.product_size || ""} // ✅ ป้องกัน undefined
+              onChange={(e) =>
+                setNewProduct((prev) => ({
+                  ...prev,
+                  product_size: e.target.value,
+                }))
+              }
               required
               className="w-full p-2 border border-gray-300 rounded"
             />
