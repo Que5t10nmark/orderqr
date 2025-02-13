@@ -5,17 +5,15 @@ import Image from "next/image";
 
 const ProductsPage = () => {
   const [product, setProduct] = useState([]);
-  const [newProduct, setNewProduct] = useState(
-    {
-      product_name: "",
-      product_type: "",
-      product_price: "",
-      product_size: "",
-      product_image: "",
-      product_description: "",
-      product_status: true,
-    } || {}
-  );
+  const [newProduct, setNewProduct] = useState({
+    product_name: "",
+    product_type: "",
+    product_price: "",
+    product_size: "",
+    product_image: "",
+    product_description: "",
+    product_status: true,
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -58,7 +56,6 @@ const ProductsPage = () => {
       setError("Error adding product: " + err.message);
     }
   };
-
   const updateProduct = async (productId, productData) => {
     try {
       const res = await fetch(`/api/product/${productId}`, {
@@ -66,60 +63,207 @@ const ProductsPage = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(productData),
       });
+
       if (!res.ok) throw new Error("Failed to update product");
 
-      await res.json(); // อาจไม่ต้องใช้ค่าที่ส่งกลับมา
-      fetchProduct(); // ✅ ดึงข้อมูลใหม่ทันทีหลังจากแก้ไข
+      // อัพเดท state โดยตรงแทนการเรียก fetchProduct
+      setProduct((prevProducts) =>
+        prevProducts.map((item) => {
+          if (item.product_id === productId) {
+            return {
+              ...productData,
+              product_id: productId,
+              product_type_name: productType.find(
+                (type) =>
+                  type.product_type_id.toString() ===
+                  productData.product_type.toString()
+              )?.product_type_name,
+              product_status_name: productData.product_status
+                ? "มีสินค้า"
+                : "ไม่มีสินค้า",
+            };
+          }
+          return item;
+        })
+      );
 
-      setNotification("แก้ไขประเภทอาหารสำเร็จ!");
+      setNotification("แก้ไขข้อมูลสำเร็จ!");
       setTimeout(() => setNotification(""), 3000);
       closeModal();
     } catch (err) {
       console.error("Error updating product:", err);
-      setError("Error updating product type: " + err.message);
+      setError("Error updating product: " + err.message);
     }
   };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    // เช็คข้อมูลที่จำเป็น
+    if (
+      !newProduct.product_name ||
+      !newProduct.product_type ||
+      !newProduct.product_price ||
+      !newProduct.product_size
+    ) {
+      setError("กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน");
+      return;
+    }
+
+    // เตรียมข้อมูลที่จะส่ง
+    const productData = {
+      ...newProduct,
+      product_status:
+        newProduct.product_status === "true" ||
+        newProduct.product_status === true
+          ? true
+          : false,
+    };
+
+    try {
+      if (isEditing) {
+        // กรณีแก้ไขข้อมูล
+        const res = await fetch(`/api/product/${newProduct.product_id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(productData),
+        });
+
+        if (!res.ok) throw new Error("Failed to update product");
+
+        // อัพเดท state โดยตรง
+        const updatedProduct = {
+          ...productData,
+          product_type_name: productType.find(
+            (type) =>
+              type.product_type_id.toString() ===
+              productData.product_type.toString()
+          )?.product_type_name,
+          product_status_name: productData.product_status
+            ? "มีสินค้า"
+            : "ไม่มีสินค้า",
+        };
+
+        setProduct((prevProducts) =>
+          prevProducts.map((item) =>
+            item.product_id === newProduct.product_id ? updatedProduct : item
+          )
+        );
+      } else {
+        // กรณีเพิ่มข้อมูลใหม่
+        const res = await fetch("/api/product", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(productData),
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message);
+
+        // เพิ่มข้อมูลใหม่เข้า state
+        const newProductWithDetails = {
+          ...productData,
+          product_id: data.id,
+          product_type_name: productType.find(
+            (type) =>
+              type.product_type_id.toString() ===
+              productData.product_type.toString()
+          )?.product_type_name,
+          product_status_name: productData.product_status
+            ? "มีสินค้า"
+            : "ไม่มีสินค้า",
+        };
+
+        setProduct((prevProducts) => [...prevProducts, newProductWithDetails]);
+      }
+
+      setNotification(isEditing ? "แก้ไขข้อมูลสำเร็จ!" : "เพิ่มข้อมูลสำเร็จ!");
+      setTimeout(() => setNotification(""), 3000);
+      closeModal();
+    } catch (err) {
+      console.error("Error:", err);
+      setError(
+        `Error ${isEditing ? "updating" : "adding"} product: ${err.message}`
+      );
+    }
+  };
+
+  // const updateProduct = async (productId, productData) => {
+  //   try {
+  //     const res = await fetch(`/api/product/${productId}`, {
+  //       method: "PUT",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify(productData),
+  //     });
+  //     if (!res.ok) throw new Error("Failed to update product");
+
+  //     await res.json(); // อาจไม่ต้องใช้ค่าที่ส่งกลับมา
+  //     fetchProduct(); // ✅ ดึงข้อมูลใหม่ทันทีหลังจากแก้ไข
+
+  //     setNotification("แก้ไขประเภทอาหารสำเร็จ!");
+  //     setTimeout(() => setNotification(""), 3000);
+  //     closeModal();
+  //   } catch (err) {
+  //     console.error("Error updating product:", err);
+  //     setError("Error updating product type: " + err.message);
+  //   }
+  // };
 
   const deleteProduct = async (productId) => {
     try {
       const res = await fetch(`/api/product/${productId}`, {
         method: "DELETE",
       });
+
       if (!res.ok) throw new Error("Failed to delete product");
 
-      // ลบข้อมูลออกจาก state product ทันที
-      setProduct((prevProduct) =>
-        prevProduct.filter((product) => product.product_id !== productId)
+      // อัพเดท state โดยตรงแบบเรียลไทม์
+      setProduct((prevProducts) =>
+        prevProducts.filter((product) => product.product_id !== productId)
       );
 
-      setNotification("ลบประเภทอาหารสำเร็จ!");
+      setNotification("ลบข้อมูลสำเร็จ!");
       setTimeout(() => setNotification(""), 3000);
-      closeModal(); // ปิด Modal หลังจากลบ
+      closeModal();
     } catch (err) {
-      setError("Error deleting product type: " + err.message);
+      setError(err.message);
     }
   };
 
   const openModal = (product = null) => {
     if (product) {
+      // แปลงค่า product_status เป็น boolean
+      const productStatus =
+        product.product_status === true ||
+        product.product_status === "true" ||
+        product.product_status === 1;
+
       setNewProduct({
-        product_id: product.product_id,
-        product_name: product.product_name,
-        product_type: product.product_type,
-        product_price: product.product_price,
-        product_size: product.product_size,
-        product_image: product.product_image,
-        product_description: product.product_description,
-        product_status: product.product_status,
+        ...product,
+        product_status: productStatus,
       });
+
+      // แสดงรูปภาพเดิม
+      if (product.product_image) {
+        setPreviewImage(`/uploads/${product.product_image}`);
+      }
       setIsEditing(true);
     } else {
-      setNewProduct({ product_name: "" });
+      setNewProduct({
+        product_name: "",
+        product_type: "",
+        product_price: "",
+        product_size: "",
+        product_image: "",
+        product_description: "",
+        product_status: true,
+      });
+      setPreviewImage(null);
       setIsEditing(false);
     }
     setIsModalOpen(true);
   };
-  
+
   const closeModal = () => {
     setIsModalOpen(false);
     setNewProduct({
@@ -132,7 +276,6 @@ const ProductsPage = () => {
       product_status: true,
     });
   };
-  
 
   const [productType, setProductType] = useState([]);
 
@@ -155,18 +298,16 @@ const ProductsPage = () => {
 
   const handleChange = (e) => {
     const { name, value, type, files } = e.target;
-  
+
     setNewProduct((prev) => ({
       ...prev,
       [name]: type === "file" ? prev.product_image : value ?? "", // ✅ ไม่เก็บ object
     }));
-  
+
     if (type === "file" && files.length > 0) {
       setPreviewImage(URL.createObjectURL(files[0]));
     }
   };
-  
-  
 
   {
     (previewImage || newProduct.product_image) && (
@@ -183,101 +324,119 @@ const ProductsPage = () => {
     );
   }
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-  
-    let productId = newProduct.product_id;
-  
-    if (!isEditing) {
-      // ✅ กรณีเพิ่มสินค้าใหม่ (`POST`)
-      try {
-        const res = await fetch("/api/product", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(newProduct),
-        });
-  
-        const responseData = await res.json();
-        console.log("🔹 Response from API (POST):", responseData);
-  
-        if (!res.ok) throw new Error(responseData.message || "❌ Failed to add product");
-  
-        productId = responseData.id; // ✅ เก็บ `id` ที่ API ส่งกลับมา
-        console.log("✅ New product added with ID:", productId);
-        setNotification("✅ เพิ่มข้อมูลสำเร็จ!");
-        closeModal(); 
-      } catch (err) {
-        console.error("❌ Error adding product:", err);
-        setError("❌ Error adding product: " + err.message);
-        return;
-      }
-    }
-  
-    // ✅ กรณีแก้ไขสินค้า (`PUT`)
-    if (isEditing) {
-      if (!productId) {
-        setError("❌ Missing product ID for update");
-        return;
-      }
-  
-      try {
-        console.log("🔹 Sending update request for product_id:", productId);
-  
-        const res = await fetch(`/api/product/${productId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(newProduct),
-        });
-  
-        const responseData = await res.json();
-        console.log("🔹 Response from server (PUT):", responseData);
-  
-        if (!res.ok) throw new Error(responseData.message || "❌ Failed to update product");
-  
-        fetchProduct();
-        setNotification("✅ แก้ไขข้อมูลสำเร็จ!");
-        setTimeout(() => setNotification(""), 3000);
-        closeModal();
-      } catch (err) {
-        console.error("❌ Error updating product:", err);
-        setError("❌ Error updating product: " + err.message);
-      }
-    }
-  };
-  
-  
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+
+  //   if (
+  // !newProduct.product_name ||
+  // !newProduct.product_type ||
+  // !newProduct.product_price ||
+  // !newProduct.product_size
+  //   ) {
+  //     setError("กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน");
+  //     return;
+  //   }
+
+  //   if (!isEditing) {
+  //     // กรณีเพิ่มข้อมูลใหม่
+  //     try {
+  //       const res = await fetch("/api/product", {
+  //         method: "POST",
+  //         headers: { "Content-Type": "application/json" },
+  //         body: JSON.stringify(newProduct),
+  //       });
+
+  //       const data = await res.json();
+  //       if (!res.ok) throw new Error(data.message);
+
+  //       // อัพเดท state โดยตรงแบบเรียลไทม์
+  //       const newProductWithDetails = {
+  //         ...newProduct,
+  //         product_id: data.id,
+  //         product_type_name: productType.find(
+  //           (type) =>
+  //             type.product_type_id.toString() ===
+  //             newProduct.product_type.toString()
+  //         )?.product_type_name,
+  //         product_status_name: newProduct.product_status
+  //           ? "มีสินค้า"
+  //           : "ไม่มีสินค้า",
+  //       };
+
+  //       setProduct((prevProducts) => [...prevProducts, newProductWithDetails]);
+  //       setNotification("เพิ่มข้อมูลสำเร็จ!");
+  //       closeModal();
+  //     } catch (err) {
+  //       setError(err.message);
+  //     }
+  //   } else {
+  //     // กรณีแก้ไขข้อมูล
+  //     try {
+  //       const res = await fetch(`/api/product/${newProduct.product_id}`, {
+  //         method: "PUT",
+  //         headers: { "Content-Type": "application/json" },
+  //         body: JSON.stringify(newProduct),
+  //       });
+
+  //       if (!res.ok) throw new Error("Failed to update product");
+
+  //       // อัพเดท state โดยตรงแบบเรียลไทม์
+  //       setProduct((prevProducts) =>
+  //         prevProducts.map((item) => {
+  //           if (item.product_id === newProduct.product_id) {
+  //             return {
+  //               ...newProduct,
+  //               product_type_name: productType.find(
+  //                 (type) =>
+  //                   type.product_type_id.toString() ===
+  //                   newProduct.product_type.toString()
+  //               )?.product_type_name,
+  //               product_status_name: newProduct.product_status
+  //                 ? "มีสินค้า"
+  //                 : "ไม่มีสินค้า",
+  //             };
+  //           }
+  //           return item;
+  //         })
+  //       );
+
+  //       setNotification("แก้ไขข้อมูลสำเร็จ!");
+  //       closeModal();
+  //     } catch (err) {
+  //       setError(err.message);
+  //     }
+  //   }
+  // };
 
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-  
+
+    // แสดงรูปตัวอย่างทันที
+    setPreviewImage(URL.createObjectURL(file));
+
     const formData = new FormData();
     formData.append("file", file);
-  
+
     try {
       const res = await fetch("/api/upload", {
         method: "POST",
         body: formData,
       });
-  
+
       const data = await res.json();
-      if (res.ok) {
-        console.log("✅ Uploaded file:", data.fileName);
-        setNewProduct((prev) => ({ ...prev, product_image: data.fileName }));
-      } else {
-        throw new Error(data.message);
-      }
+      if (!res.ok) throw new Error(data.message);
+
+      setNewProduct((prev) => ({
+        ...prev,
+        product_image: data.fileName,
+      }));
     } catch (err) {
-      console.error("❌ Error uploading file:", err);
       setError("Error uploading file: " + err.message);
+      setPreviewImage(null);
     }
   };
-  
-  
-  
-  
-   
-  
+
   const clearForm = () => {
     setNewProduct({
       product_name: "",
@@ -369,12 +528,14 @@ const ProductsPage = () => {
                 <td className="px-4 py-2 border text-center">
                   {product.product_image ? (
                     <Image
-  src={`/uploads/${product.product_image || "placeholder.jpg"}`}
-  alt={product.product_name || "No Image"}
-  width={50}
-  height={50}
-  className="rounded border"
-/>
+                      src={`/uploads/${
+                        product.product_image || "placeholder.jpg"
+                      }`}
+                      alt={product.product_name || "No Image"}
+                      width={50}
+                      height={50}
+                      className="rounded border"
+                    />
                   ) : (
                     <p className="text-gray-400">ไม่มีรูป</p>
                   )}
@@ -440,7 +601,10 @@ const ProductsPage = () => {
               <option value="">เลือกประเภทสินค้า</option>
               {productType.length > 0 ? (
                 productType.map((product_type) => (
-                  <option key={product_type.product_type_id} value={product_type.product_type_id}>
+                  <option
+                    key={product_type.product_type_id}
+                    value={product_type.product_type_id}
+                  >
                     {product_type.product_type_name}
                   </option>
                 ))
@@ -489,6 +653,7 @@ const ProductsPage = () => {
             />
           </div>
 
+          {/* ส่วนอัพโหลดรูปภาพ */}
           <div>
             <label htmlFor="product_image" className="block">
               รูปภาพ
@@ -523,13 +688,12 @@ const ProductsPage = () => {
             <select
               id="product_status"
               name="product_status"
-              value={newProduct.product_status?.toString() ?? "1"} // ✅ แปลงเป็น string
+              value={String(newProduct.product_status)}
               onChange={handleChange}
-              required
               className="w-full p-2 border border-gray-300 rounded"
             >
-              <option value="1">มีสินค้า</option>
-              <option value="0">ไม่มีสินค้า</option>
+              <option value="true">มีสินค้า</option>
+              <option value="false">ไม่มีสินค้า</option>
             </select>
           </div>
 
