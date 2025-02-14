@@ -188,27 +188,6 @@ const ProductsPage = () => {
     }
   };
 
-  // const updateProduct = async (productId, productData) => {
-  //   try {
-  //     const res = await fetch(`/api/product/${productId}`, {
-  //       method: "PUT",
-  //       headers: { "Content-Type": "application/json" },
-  //       body: JSON.stringify(productData),
-  //     });
-  //     if (!res.ok) throw new Error("Failed to update product");
-
-  //     await res.json(); // อาจไม่ต้องใช้ค่าที่ส่งกลับมา
-  //     fetchProduct(); // ✅ ดึงข้อมูลใหม่ทันทีหลังจากแก้ไข
-
-  //     setNotification("แก้ไขประเภทอาหารสำเร็จ!");
-  //     setTimeout(() => setNotification(""), 3000);
-  //     closeModal();
-  //   } catch (err) {
-  //     console.error("Error updating product:", err);
-  //     setError("Error updating product type: " + err.message);
-  //   }
-  // };
-
   const deleteProduct = async (productId) => {
     try {
       const res = await fetch(`/api/product/${productId}`, {
@@ -324,118 +303,38 @@ const ProductsPage = () => {
     );
   }
 
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-
-  //   if (
-  // !newProduct.product_name ||
-  // !newProduct.product_type ||
-  // !newProduct.product_price ||
-  // !newProduct.product_size
-  //   ) {
-  //     setError("กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน");
-  //     return;
-  //   }
-
-  //   if (!isEditing) {
-  //     // กรณีเพิ่มข้อมูลใหม่
-  //     try {
-  //       const res = await fetch("/api/product", {
-  //         method: "POST",
-  //         headers: { "Content-Type": "application/json" },
-  //         body: JSON.stringify(newProduct),
-  //       });
-
-  //       const data = await res.json();
-  //       if (!res.ok) throw new Error(data.message);
-
-  //       // อัพเดท state โดยตรงแบบเรียลไทม์
-  //       const newProductWithDetails = {
-  //         ...newProduct,
-  //         product_id: data.id,
-  //         product_type_name: productType.find(
-  //           (type) =>
-  //             type.product_type_id.toString() ===
-  //             newProduct.product_type.toString()
-  //         )?.product_type_name,
-  //         product_status_name: newProduct.product_status
-  //           ? "มีสินค้า"
-  //           : "ไม่มีสินค้า",
-  //       };
-
-  //       setProduct((prevProducts) => [...prevProducts, newProductWithDetails]);
-  //       setNotification("เพิ่มข้อมูลสำเร็จ!");
-  //       closeModal();
-  //     } catch (err) {
-  //       setError(err.message);
-  //     }
-  //   } else {
-  //     // กรณีแก้ไขข้อมูล
-  //     try {
-  //       const res = await fetch(`/api/product/${newProduct.product_id}`, {
-  //         method: "PUT",
-  //         headers: { "Content-Type": "application/json" },
-  //         body: JSON.stringify(newProduct),
-  //       });
-
-  //       if (!res.ok) throw new Error("Failed to update product");
-
-  //       // อัพเดท state โดยตรงแบบเรียลไทม์
-  //       setProduct((prevProducts) =>
-  //         prevProducts.map((item) => {
-  //           if (item.product_id === newProduct.product_id) {
-  //             return {
-  //               ...newProduct,
-  //               product_type_name: productType.find(
-  //                 (type) =>
-  //                   type.product_type_id.toString() ===
-  //                   newProduct.product_type.toString()
-  //               )?.product_type_name,
-  //               product_status_name: newProduct.product_status
-  //                 ? "มีสินค้า"
-  //                 : "ไม่มีสินค้า",
-  //             };
-  //           }
-  //           return item;
-  //         })
-  //       );
-
-  //       setNotification("แก้ไขข้อมูลสำเร็จ!");
-  //       closeModal();
-  //     } catch (err) {
-  //       setError(err.message);
-  //     }
-  //   }
-  // };
-
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
-    // แสดงรูปตัวอย่างทันที
-    setPreviewImage(URL.createObjectURL(file));
-
+  
+    setPreviewImage(URL.createObjectURL(file)); // แสดงตัวอย่างรูปที่อัปโหลด
+  
     const formData = new FormData();
     formData.append("file", file);
-
+  
     try {
       const res = await fetch("/api/upload", {
         method: "POST",
         body: formData,
       });
-
+  
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
-
+  
+      console.log("✅ File uploaded:", data.fileName);
+  
       setNewProduct((prev) => ({
         ...prev,
-        product_image: data.fileName,
+        product_image: data.fileName, // ✅ ใช้ชื่อไฟล์ที่อัปโหลดได้จริง
       }));
     } catch (err) {
+      console.error("❌ Error uploading file:", err);
       setError("Error uploading file: " + err.message);
       setPreviewImage(null);
     }
   };
+  
+  
 
   const clearForm = () => {
     setNewProduct({
@@ -528,9 +427,7 @@ const ProductsPage = () => {
                 <td className="px-4 py-2 border text-center">
                   {product.product_image ? (
                     <Image
-                      src={`/uploads/${
-                        product.product_image || "placeholder.jpg"
-                      }`}
+                      src={`/uploads/${product.product_image || "placeholder.jpg"}`}
                       alt={product.product_name || "No Image"}
                       width={50}
                       height={50}

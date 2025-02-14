@@ -1,167 +1,186 @@
-import { NextResponse } from "next/server";
-import { unlink } from "fs/promises";
-import { join } from "path";
-import pool from "../../../lib/db";
+import { NextResponse } from "next/server"; // ✅ ใช้สำหรับส่ง Response จาก API
+import { writeFile } from "fs/promises"; // ✅ ใช้สำหรับบันทึกไฟล์ลงในเซิร์ฟเวอร์
+import { join } from "path"; // ✅ ใช้รวม path ของไฟล์ (ทำให้รองรับทุก OS)
+import pool from "../../../lib/db"; // ✅ นำเข้า database connection pool
 
+// ✅ ฟังก์ชันช่วยรันคำสั่ง SQL และจัดการข้อผิดพลาด
 async function handleDBQuery(query, params) {
   try {
-    const [result] = await pool.query(query, params);
-    return result;
+    const [result] = await pool.query(query, params); // ✅ รัน SQL query
+    return result; // ✅ คืนค่าผลลัพธ์จากฐานข้อมูล
   } catch (error) {
-    throw new Error(error.message);
+    throw new Error(error.message); // ✅ ส่ง error กลับไปถ้ามีปัญหา
   }
 }
 
-export async function GET(req, { params: { id } }) {
-  const product_id = Number(id);
-  if (isNaN(product_id))
-    return Response.json({ message: "Invalid product ID" }, { status: 400 });
+// ✅ ดึงข้อมูลสินค้า (GET)
+export async function GET(req, { params }) {
+  const product_id = Number(params?.id); // ✅ แปลง id เป็นตัวเลข
+  if (isNaN(product_id)) { // ✅ ถ้า id ไม่ใช่ตัวเลข ส่ง error 400
+    return NextResponse.json({ message: "❌ Invalid product ID" }, { status: 400 });
+  }
+
+  // ✅ ดึงข้อมูลสินค้าและประเภทจากฐานข้อมูล
   const product = await handleDBQuery(
-    `
-    SELECT p.*, pt.product_type_name 
+    `SELECT p.*, pt.product_type_name 
     FROM product p
     JOIN product_type pt ON p.product_type = pt.product_type_id
-    WHERE p.product_id = ?
-    `,
+    WHERE p.product_id = ?`,
     [product_id]
   );
 
-  return Response.json(
-    product.length
-      ? product
-      : {
-          message: "Product not found",
-        },
-    {
-      status: product.length ? 200 : 404,
-    }
+  return NextResponse.json(
+    product.length ? product : { message: "❌ Product not found" }, 
+    { status: product.length ? 200 : 404 } // ✅ ถ้าพบสินค้า ส่ง 200, ถ้าไม่พบ ส่ง 404
   );
 }
 
-export async function PUT(req) {
+// ✅ เพิ่มสินค้าใหม่ (POST)
+export async function POST(req) {
   try {
-    const url = new URL(req.url);
-    const id = url.pathname.split("/").pop();
-    const product_id = Number(id);
-    const productData = await req.json();
+    const formData = await req.formData(); // ✅ รับค่าจากฟอร์ม
 
-    // ดึงข้อมูลรูปภาพเก่า
-    const [oldProduct] = await pool.query(
-      "SELECT product_image FROM product WHERE product_id = ?",
-      [product_id]
-    );
+    // ✅ ดึงค่าจากฟอร์มและเก็บไว้ในตัวแปร
+    const productData = {
+      product_name: formData.get("product_name") || "", // ✅ ชื่อสินค้า
+      product_type: formData.get("product_type") || "", // ✅ ประเภทสินค้า
+      product_price: formData.get("product_price") || "0", // ✅ ราคา
+      product_size: formData.get("product_size") || "", // ✅ ขนาด
+      product_description: formData.get("product_description") || "", // ✅ คำอธิบาย
+      product_status: formData.get("product_status") === "1" ? 1 : 0, // ✅ สถานะสินค้า (1 = มี, 0 = ไม่มี)
+    };
 
-    // ถ้ามีการเปลี่ยนรูปภาพและมีรูปเก่าอยู่ ให้ลบรูปเก่า
-    if (
-      oldProduct[0]?.product_image &&
-      oldProduct[0].product_image !== productData.product_image
-    ) {
-      try {
-        const oldImagePath = join(
-          process.cwd(),
-          "public/uploads",
-          oldProduct[0].product_image
-        );
-        await unlink(oldImagePath);
-        console.log("✅ Old image deleted:", oldProduct[0].product_image);
-      } catch (err) {
-        console.error("❌ Error deleting old image file:", err);
-      }
+    let product_image = ""; // ✅ กำหนดตัวแปรเก็บชื่อไฟล์รูปภาพ
+    const file = formData.get("file"); // ✅ ดึงไฟล์ที่อัปโหลดจากฟอร์ม
+    if (file && file.name) { // ✅ ตรวจสอบว่ามีไฟล์แนบมาหรือไม่
+      const ext = file.name.split(".").pop(); // ✅ ดึงนามสกุลไฟล์
+      product_image = `${Date.now()}.${ext}`; // ✅ สร้างชื่อไฟล์ใหม่เพื่อป้องกันชื่อซ้ำ
+      const filePath = join(process.cwd(), "public/uploads", product_image); // ✅ กำหนด path ที่บันทึกไฟล์
+      await writeFile(filePath, Buffer.from(await file.arrayBuffer())); // ✅ บันทึกไฟล์ลงในโฟลเดอร์
     }
 
-    // อัพเดทข้อมูลในฐานข้อมูล
-    const [result] = await pool.query(
-      `UPDATE product 
+    // ✅ บันทึกข้อมูลสินค้าเข้าในฐานข้อมูล
+    const query = `
+      INSERT INTO product 
+      (product_name, product_type, product_price, product_size, product_image, product_description, product_status) 
+      VALUES (?, ?, ?, ?, ?, ?, ?)`;
+
+    const params = [
+      productData.product_name,
+      productData.product_type,
+      productData.product_price,
+      productData.product_size,
+      product_image, // ✅ ใช้ชื่อไฟล์ที่อัปโหลด
+      productData.product_description,
+      productData.product_status,
+    ];
+
+    const result = await handleDBQuery(query, params); // ✅ รัน SQL query
+
+    return NextResponse.json(
+      { message: "✅ Product added", product_id: result.insertId }, // ✅ ส่งข้อมูลกลับไปพร้อม ID ของสินค้าที่เพิ่ม
+      { status: 201 }
+    );
+  } catch (error) {
+    return NextResponse.json({ message: "❌ Error adding product", error: error.message }, { status: 500 });
+  }
+}
+
+// ✅ อัปเดตข้อมูลสินค้า (PUT)
+export async function PUT(req, { params }) {
+  try {
+    console.log("🔹 Request received:", req.method, req.url);
+
+    const product_id = Number(params.id); // ✅ แปลง ID ที่ได้จาก URL เป็นตัวเลข
+    if (!product_id || isNaN(product_id)) { // ✅ ตรวจสอบว่า ID ถูกต้อง
+      return NextResponse.json({ message: "❌ Invalid product ID" }, { status: 400 });
+    }
+
+    const contentType = req.headers.get("content-type") || ""; // ✅ ตรวจสอบประเภทของข้อมูลที่ส่งมา
+    let productData = {};
+    let product_image = "";
+
+    if (contentType.includes("multipart/form-data")) { // ✅ ถ้าเป็น multipart/form-data แสดงว่ามีไฟล์แนบ
+      const formData = await req.formData();
+      console.log("🔹 Received formData:", formData);
+
+      productData = {
+        product_name: formData.get("product_name") || "",
+        product_type: formData.get("product_type") || "",
+        product_price: formData.get("product_price") || "0",
+        product_size: formData.get("product_size") || "",
+        product_description: formData.get("product_description") || "",
+        product_status: formData.get("product_status") === "1" ? 1 : 0,
+      };
+
+      const file = formData.get("file"); // ✅ รับไฟล์ที่อัปโหลด
+      if (file && file.name) { // ✅ ถ้ามีไฟล์แนบ
+        const ext = file.name.split(".").pop();
+        product_image = `${Date.now()}.${ext}`;
+        const filePath = join(process.cwd(), "public/uploads", product_image);
+        await writeFile(filePath, Buffer.from(await file.arrayBuffer())); // ✅ บันทึกไฟล์
+        console.log("✅ Image uploaded:", product_image);
+      } else {
+        product_image = formData.get("product_image") || ""; // ✅ ถ้าไม่มีอัปโหลดใหม่ ใช้ภาพเดิม
+      }
+    } else {
+      productData = await req.json();
+      product_image = productData.product_image || ""; // ✅ ใช้ค่าที่ส่งมา
+    }
+
+    console.log("🔹 Parsed productData:", productData);
+    console.log("🔹 Using product_image:", product_image);
+
+    // ✅ อัปเดตข้อมูลสินค้าในฐานข้อมูล
+    const query = `
+      UPDATE product 
       SET product_name = ?, product_type = ?, product_price = ?, 
           product_size = ?, product_image = ?, product_description = ?, 
           product_status = ? 
-      WHERE product_id = ?`,
-      [
-        productData.product_name,
-        productData.product_type,
-        productData.product_price,
-        productData.product_size,
-        productData.product_image,
-        productData.product_description,
-        productData.product_status,
-        product_id,
-      ]
-    );
+      WHERE product_id = ?
+    `;
 
-    return Response.json(
-      {
-        message: result.affectedRows
-          ? "Product updated successfully"
-          : "Product not found",
-        data: productData,
-      },
+    const queryParams = [
+      productData.product_name,
+      productData.product_type,
+      productData.product_price,
+      productData.product_size,
+      product_image,
+      productData.product_description,
+      productData.product_status,
+      product_id,
+    ];
+
+    console.log("🔹 Executing SQL Query:", query);
+    console.log("🔹 Query Parameters:", queryParams);
+
+    const [result] = await pool.query(query, queryParams);
+    console.log("✅ Query result:", result);
+
+    return NextResponse.json(
+      { message: result.affectedRows ? "✅ Product updated" : "❌ Product not found" },
       { status: result.affectedRows ? 200 : 404 }
     );
   } catch (error) {
-    console.error("❌ Error in PUT:", error);
-    return Response.json(
-      { message: "Error updating product", error: error.message },
+    console.error("❌ Error updating product:", error);
+    return NextResponse.json(
+      { message: "❌ Error updating product", error: error.message },
       { status: 500 }
     );
   }
 }
 
+// ✅ ลบสินค้า (DELETE)
 export async function DELETE(req) {
-  try {
-    const url = new URL(req.url);
-    const id = url.pathname.split("/").pop();
-    const product_id = Number(id);
-
-    if (isNaN(product_id)) {
-      return NextResponse.json(
-        { message: "Invalid product ID" },
-        { status: 400 }
-      );
-    }
-
-    // ดึงข้อมูลรูปภาพก่อนลบ
-    const [product] = await pool.query(
-      "SELECT product_image FROM product WHERE product_id = ?",
-      [product_id]
-    );
-
-    // ลบข้อมูลในฐานข้อมูลก่อน
-    const [result] = await pool.query(
-      "DELETE FROM product WHERE product_id = ?",
-      [product_id]
-    );
-
-    if (result.affectedRows) {
-      // ถ้ามีไฟล์รูปภาพ ให้ลบออกจากเซิร์ฟเวอร์
-      if (product && product[0]?.product_image) {
-        try {
-          const imagePath = join(
-            process.cwd(),
-            "public/uploads",
-            product[0].product_image
-          );
-          await unlink(imagePath);
-          console.log("✅ Image deleted:", product[0].product_image);
-        } catch (err) {
-          console.error("❌ Error deleting image file:", err);
-        }
-      }
-
-      return NextResponse.json(
-        { message: "Product deleted successfully" },
-        { status: 200 }
-      );
-    } else {
-      return NextResponse.json(
-        { message: "Product not found" },
-        { status: 404 }
-      );
-    }
-  } catch (error) {
-    console.error("❌ Error in DELETE:", error);
-    return NextResponse.json(
-      { message: "Error deleting product", error: error.message },
-      { status: 500 }
-    );
+  const product_id = Number(req.nextUrl.pathname.split("/").pop());
+  if (isNaN(product_id)) {
+    return NextResponse.json({ message: "❌ Invalid product ID" }, { status: 400 });
   }
+
+  const result = await handleDBQuery("DELETE FROM product WHERE product_id = ?", [product_id]);
+
+  return NextResponse.json(
+    { message: result.affectedRows ? "✅ Product deleted" : "❌ Product not found" },
+    { status: result.affectedRows ? 200 : 404 }
+  );
 }

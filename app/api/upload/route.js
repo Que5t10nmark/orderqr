@@ -4,34 +4,28 @@ import { join } from "path";
 
 export async function POST(req) {
   try {
-    // ✅ ใช้ `req.formData()` เพื่อดึงข้อมูลไฟล์จากฟอร์ม
+    // ✅ อ่านค่า FormData
     const formData = await req.formData();
     const file = formData.get("file");
 
+    // ✅ ตรวจสอบว่ามีไฟล์อัปโหลด
     if (!file) {
       return NextResponse.json({ message: "❌ No file uploaded" }, { status: 400 });
     }
 
-    // ✅ อ่านข้อมูลไฟล์
-    const fileBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(fileBuffer);
-
-    // ✅ ตั้งชื่อไฟล์ใหม่
-    const ext = file.name.split(".").pop();
+    // ✅ ตั้งชื่อไฟล์ใหม่เพื่อป้องกันซ้ำกัน
+    const ext = file.name.split(".").pop(); // ดึงนามสกุลไฟล์
     const fileName = `${Date.now()}.${ext}`;
     const filePath = join(process.cwd(), "public/uploads", fileName);
 
-    // ✅ บันทึกไฟล์ไปที่ `public/uploads`
-    await writeFile(filePath, buffer);
+    // ✅ เขียนไฟล์ลงใน `public/uploads`
+    await writeFile(filePath, Buffer.from(await file.arrayBuffer()));
 
-    return NextResponse.json(
-      { message: "✅ File uploaded successfully", fileName },
-      { status: 200 }
-    );
+    console.log("✅ File uploaded:", fileName);
+
+    return NextResponse.json({ message: "✅ File uploaded", fileName }, { status: 200 });
   } catch (error) {
-    return NextResponse.json(
-      { message: "❌ Error uploading file", error: error.message },
-      { status: 500 }
-    );
+    console.error("❌ Error uploading file:", error);
+    return NextResponse.json({ message: "❌ Error uploading file", error: error.message }, { status: 500 });
   }
 }
