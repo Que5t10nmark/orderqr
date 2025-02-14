@@ -15,9 +15,14 @@ async function handleDBQuery(query, params) {
 
 // ✅ ดึงข้อมูลสินค้า (GET)
 export async function GET(req, { params }) {
-  const product_id = Number(params?.id); // ✅ แปลง id เป็นตัวเลข
-  if (isNaN(product_id)) { // ✅ ถ้า id ไม่ใช่ตัวเลข ส่ง error 400
-    return NextResponse.json({ message: "❌ Invalid product ID" }, { status: 400 });
+  const routeParams = await params;
+  const product_id = Number(routeParams?.id); // ✅ แปลง id เป็นตัวเลข
+  if (isNaN(product_id)) {
+    // ✅ ถ้า id ไม่ใช่ตัวเลข ส่ง error 400
+    return NextResponse.json(
+      { message: "❌ Invalid product ID" },
+      { status: 400 }
+    );
   }
 
   // ✅ ดึงข้อมูลสินค้าและประเภทจากฐานข้อมูล
@@ -30,7 +35,7 @@ export async function GET(req, { params }) {
   );
 
   return NextResponse.json(
-    product.length ? product : { message: "❌ Product not found" }, 
+    product.length ? product : { message: "❌ Product not found" },
     { status: product.length ? 200 : 404 } // ✅ ถ้าพบสินค้า ส่ง 200, ถ้าไม่พบ ส่ง 404
   );
 }
@@ -52,7 +57,8 @@ export async function POST(req) {
 
     let product_image = ""; // ✅ กำหนดตัวแปรเก็บชื่อไฟล์รูปภาพ
     const file = formData.get("file"); // ✅ ดึงไฟล์ที่อัปโหลดจากฟอร์ม
-    if (file && file.name) { // ✅ ตรวจสอบว่ามีไฟล์แนบมาหรือไม่
+    if (file && file.name) {
+      // ✅ ตรวจสอบว่ามีไฟล์แนบมาหรือไม่
       const ext = file.name.split(".").pop(); // ✅ ดึงนามสกุลไฟล์
       product_image = `${Date.now()}.${ext}`; // ✅ สร้างชื่อไฟล์ใหม่เพื่อป้องกันชื่อซ้ำ
       const filePath = join(process.cwd(), "public/uploads", product_image); // ✅ กำหนด path ที่บันทึกไฟล์
@@ -82,7 +88,10 @@ export async function POST(req) {
       { status: 201 }
     );
   } catch (error) {
-    return NextResponse.json({ message: "❌ Error adding product", error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { message: "❌ Error adding product", error: error.message },
+      { status: 500 }
+    );
   }
 }
 
@@ -90,17 +99,22 @@ export async function POST(req) {
 export async function PUT(req, { params }) {
   try {
     console.log("🔹 Request received:", req.method, req.url);
-
-    const product_id = Number(params.id); // ✅ แปลง ID ที่ได้จาก URL เป็นตัวเลข
-    if (!product_id || isNaN(product_id)) { // ✅ ตรวจสอบว่า ID ถูกต้อง
-      return NextResponse.json({ message: "❌ Invalid product ID" }, { status: 400 });
+    const routeParams = await params;
+    const product_id = Number(routeParams.id);
+    if (!product_id || isNaN(product_id)) {
+      // ✅ ตรวจสอบว่า ID ถูกต้อง
+      return NextResponse.json(
+        { message: "❌ Invalid product ID" },
+        { status: 400 }
+      );
     }
 
     const contentType = req.headers.get("content-type") || ""; // ✅ ตรวจสอบประเภทของข้อมูลที่ส่งมา
     let productData = {};
     let product_image = "";
 
-    if (contentType.includes("multipart/form-data")) { // ✅ ถ้าเป็น multipart/form-data แสดงว่ามีไฟล์แนบ
+    if (contentType.includes("multipart/form-data")) {
+      // ✅ ถ้าเป็น multipart/form-data แสดงว่ามีไฟล์แนบ
       const formData = await req.formData();
       console.log("🔹 Received formData:", formData);
 
@@ -114,7 +128,8 @@ export async function PUT(req, { params }) {
       };
 
       const file = formData.get("file"); // ✅ รับไฟล์ที่อัปโหลด
-      if (file && file.name) { // ✅ ถ้ามีไฟล์แนบ
+      if (file && file.name) {
+        // ✅ ถ้ามีไฟล์แนบ
         const ext = file.name.split(".").pop();
         product_image = `${Date.now()}.${ext}`;
         const filePath = join(process.cwd(), "public/uploads", product_image);
@@ -158,7 +173,11 @@ export async function PUT(req, { params }) {
     console.log("✅ Query result:", result);
 
     return NextResponse.json(
-      { message: result.affectedRows ? "✅ Product updated" : "❌ Product not found" },
+      {
+        message: result.affectedRows
+          ? "✅ Product updated"
+          : "❌ Product not found",
+      },
       { status: result.affectedRows ? 200 : 404 }
     );
   } catch (error) {
@@ -174,13 +193,23 @@ export async function PUT(req, { params }) {
 export async function DELETE(req) {
   const product_id = Number(req.nextUrl.pathname.split("/").pop());
   if (isNaN(product_id)) {
-    return NextResponse.json({ message: "❌ Invalid product ID" }, { status: 400 });
+    return NextResponse.json(
+      { message: "❌ Invalid product ID" },
+      { status: 400 }
+    );
   }
 
-  const result = await handleDBQuery("DELETE FROM product WHERE product_id = ?", [product_id]);
+  const result = await handleDBQuery(
+    "DELETE FROM product WHERE product_id = ?",
+    [product_id]
+  );
 
   return NextResponse.json(
-    { message: result.affectedRows ? "✅ Product deleted" : "❌ Product not found" },
+    {
+      message: result.affectedRows
+        ? "✅ Product deleted"
+        : "❌ Product not found",
+    },
     { status: result.affectedRows ? 200 : 404 }
   );
 }
