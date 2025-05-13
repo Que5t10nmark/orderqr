@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"; // ✅ ใช้สำหรับส่ง Response จาก API
 import { writeFile } from "fs/promises"; // ✅ ใช้สำหรับบันทึกไฟล์ลงในเซิร์ฟเวอร์
 import { join } from "path"; // ✅ ใช้รวม path ของไฟล์ (ทำให้รองรับทุก OS)
-import pool from "../../../lib/db"; // ✅ นำเข้า database connection pool
+import pool from "../../../../lib/db"; // ✅ นำเข้า database connection pool
 
 // ✅ ฟังก์ชันช่วยรันคำสั่ง SQL และจัดการข้อผิดพลาด
 async function handleDBQuery(query, params) {

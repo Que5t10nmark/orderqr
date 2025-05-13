@@ -1,4 +1,4 @@
-import pool from "../../lib/db";
+import pool from "../../../lib/db";
 
 export async function GET() {
   try {
@@ -31,7 +31,9 @@ export async function POST(req) {
     const { product_type_name } = await req.json();
     if (!product_type_name) {
       return new Response(
-        JSON.stringify({ message: "Missing required field: product_type_name" }),
+        JSON.stringify({
+          message: "Missing required field: product_type_name",
+        }),
         {
           status: 400,
           headers: { "Content-Type": "application/json" },
